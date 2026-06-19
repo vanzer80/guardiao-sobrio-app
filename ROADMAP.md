@@ -235,10 +235,18 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 - [ ] Integração webhook Stripe (secret key em env da Edge Function)
 - [ ] Audit log: registra upgrade/downgrade com evento Stripe
 
-#### Semana 3 (final) — Checkout Flow + Testes
-- [ ] Implementar PlansScreen checkout (abrir Stripe payment → webhook → plan update)
-- [ ] Teste: upgrade + downgrade (RLS válida)
-- [ ] Copy validado em `guardiao-sobrio-docs`
+#### Semana 3 (em andamento) — Deploy + Configuração
+- [x] Deep link handler `guardiaosobrio://plans/success` (poll plano + feedback visual)
+- [x] Deep link handler `guardiaosobrio://plans/cancel` (retorno gracioso)
+- [x] Sincronização de plano no login (`_layout.tsx` → `usePlanStore`)
+- [x] Tipos TypeScript alinhados com migration (profiles.plan, subscription_audit_log)
+- [x] `app.json` — scheme `guardiaosobrio` alinhado nas Edge Functions
+- [ ] **Deploy Edge Functions** no Supabase ⚠️ requer `supabase login` + `supabase link`
+- [ ] **Configurar secrets** no Supabase Dashboard (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, price IDs)
+- [ ] **Aplicar migration** no banco remoto (`profiles.plan`, `stripe_customer_id`, audit log)
+- [ ] **Registrar webhook** no Stripe Dashboard → `https://huumwjwndsefdmgezohb.supabase.co/functions/v1/handle-stripe-webhooks`
+- [ ] **Criar produtos Stripe** (Essential Monthly/Annual, Guardian Monthly/Annual)
+- [ ] **Teste E2E** com cartão Stripe test mode (`4242 4242 4242 4242`)
 - **Planos:** Essencial R$ 19,90/mês · Guardião R$ 39,90/mês · Anual R$ 299
 - **Paywall:** suave (avisa, nunca bloqueia SOS)
 
