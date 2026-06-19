@@ -229,11 +229,12 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 - [x] Hard rules auditadas (zero cura, disclaimer, paywall suave)
 - **DoD:** ✅ typecheck verde · ✅ lint verde · ✅ RLS em todas as tabelas
 
-#### Semana 2 (próxima) — Edge Functions + Webhooks
-- [ ] Edge Function `create-checkout-session` (cria customer Stripe → session)
-- [ ] Edge Function `handle-stripe-webhooks` (payment_intent.succeeded → update plan)
-- [ ] Integração webhook Stripe (secret key em env da Edge Function)
-- [ ] Audit log: registra upgrade/downgrade com evento Stripe
+#### Semana 2 — Edge Functions + Webhooks ✅ CÓDIGO PRONTO (19/06/2026)
+- [x] Edge Function `create-checkout-session` — cria/recupera customer Stripe, retorna `{ sessionId, url }` para abertura via `Linking.openURL`
+- [x] Edge Function `handle-stripe-webhooks` — valida HMAC, trata 4 eventos: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`
+- [x] Audit log: `subscription_audit_log` populado pelo webhook em upgrade/downgrade
+- [ ] **Deploy Edge Functions** ⚠️ requer `supabase login` + `supabase link` (externo ao dev)
+- [ ] **Secrets no Supabase** Dashboard: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, price IDs
 
 #### Semana 3 (em andamento) — Deploy + Configuração
 - [x] Deep link handler `guardiaosobrio://plans/success` (poll plano + feedback visual)
@@ -274,10 +275,24 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 ---
 
 ## FASE 3 — Comunidade & Retenção · Semanas 17+
-- [ ] Programa 30 Dias (conteúdo diário sequenciado + certificado)
-- [ ] Comunidade O Escudo (feed curado, posts anônimos, moderação do criador)
+
+### Programa 30 Dias ✅ CONCLUÍDO (19/06/2026)
+- [x] `lib/programa30dias.ts` — 30 dias de conteúdo progressivo (fundamento do ciclo de 13 + protocolo preventivo diário + prompt de reflexão)
+- [x] Desbloqueio sequencial: dia N só disponível após conclusão do dia N-1
+- [x] Barra de progresso (X/30 com percentual visual)
+- [x] Certificado digital ao concluir 30 dias (sem expor conteúdo de sobriedade externamente)
+- [x] `app/programa30.tsx` — tela completa com overlay de detalhe por dia e botão "Concluir dia N"
+- [x] Paywall Guardian: tela exibe card de upgrade para planos inferiores
+- [x] Disclaimer hard-rule em toda view ("não substitui psiquiatra...")
+- [x] Persiste progresso via `diary_entries` (entrada especial `programa30-dia-N`)
+- [x] Acesso via cards dedicados em Método e Perfil (Guardian: dourado; free: aponta paywall)
+- [x] 68 testes unitários cobrindo toda a lógica de negócio do app (sobriety, protocolo, fundamentos, monetização, stripe, programa30dias)
+- **DoD:** ✅ typecheck verde · ✅ lint verde · ✅ 68/68 testes passando · ✅ hard rules auditadas
+
+### Pendentes
+- [ ] Comunidade O Escudo (feed curado, posts anônimos, moderação do criador) — DA4 aberta
 - [ ] Notificações de comunidade (opt-in)
-- [ ] Analytics anonimizados (DA3)
+- [ ] Analytics anonimizados — DA3 aberta
 - [ ] A/B test: onboarding e paywall
 
 ---
@@ -333,7 +348,7 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 | Startup (mid-range) | < 2s |
 | Completar checklist | < 3 min |
 | SOS acessível em | 2 toques |
-| Cobertura de testes (negócio) | > 60% |
+| Cobertura de testes (negócio) | > 60% · **68 testes unitários ativos** (sobriety, protocolo, fundamentos, monetização, stripe, programa30) |
 | LGPD: excluir conta | 2 toques |
 | Acessibilidade | WCAG AA |
 | Promessas de cura | zero (auditoria por release) |
