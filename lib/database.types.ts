@@ -1,59 +1,603 @@
-// Gerado via: npx supabase gen types typescript --project-id <id> > lib/database.types.ts
-// Por enquanto, placeholder tipado. Substituir após criar o schema no Supabase.
-export type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
-export interface Database {
+export type Database = {
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
   public: {
     Tables: {
+      checklist_completions: {
+        Row: {
+          completed_at: string
+          completed_date: string
+          id: string
+          item_id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          completed_date: string
+          id?: string
+          item_id: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          completed_date?: string
+          id?: string
+          item_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_completions_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checklist_items: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          sort_order: number
+          title: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          title: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      diary_entries: {
+        Row: {
+          content: Json
+          craving_level: number | null
+          created_at: string
+          entry_date: string
+          id: string
+          mood_score: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: Json
+          craving_level?: number | null
+          created_at?: string
+          entry_date: string
+          id?: string
+          mood_score?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: Json
+          craving_level?: number | null
+          created_at?: string
+          entry_date?: string
+          id?: string
+          mood_score?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      emergency_contacts: {
+        Row: {
+          created_at: string
+          id: string
+          is_primary: boolean
+          name: string
+          phone: string
+          relationship: string | null
+          sort_order: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          name: string
+          phone: string
+          relationship?: string | null
+          sort_order?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          name?: string
+          phone?: string
+          relationship?: string | null
+          sort_order?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      family_connections: {
+        Row: {
+          can_see_checklist: boolean
+          can_see_diary: boolean
+          can_see_sos: boolean
+          can_see_triggers: boolean
+          created_at: string
+          family_email: string | null
+          family_name: string
+          family_user_id: string | null
+          id: string
+          invitation_status: string
+          invitation_token: string | null
+          relationship: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          can_see_checklist?: boolean
+          can_see_diary?: boolean
+          can_see_sos?: boolean
+          can_see_triggers?: boolean
+          created_at?: string
+          family_email?: string | null
+          family_name: string
+          family_user_id?: string | null
+          id?: string
+          invitation_status?: string
+          invitation_token?: string | null
+          relationship?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          can_see_checklist?: boolean
+          can_see_diary?: boolean
+          can_see_sos?: boolean
+          can_see_triggers?: boolean
+          created_at?: string
+          family_email?: string | null
+          family_name?: string
+          family_user_id?: string | null
+          id?: string
+          invitation_status?: string
+          invitation_token?: string | null
+          relationship?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
-          id: string;
-          user_id: string;
-          name: string | null;
-          sobriety_start: string | null;
-          plan: 'free' | 'essencial' | 'guardiao';
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'created_at' | 'updated_at'>;
-        Update: Partial<Database['public']['Tables']['profiles']['Insert']>;
-      };
-      daily_checklists: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          is_premium: boolean
+          onboarding_completed: boolean
+          sobriety_start_date: string | null
+          substance_focus: string | null
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          is_premium?: boolean
+          onboarding_completed?: boolean
+          sobriety_start_date?: string | null
+          substance_focus?: string | null
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          is_premium?: boolean
+          onboarding_completed?: boolean
+          sobriety_start_date?: string | null
+          substance_focus?: string | null
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      push_tokens: {
         Row: {
-          id: string;
-          user_id: string;
-          date: string;
-          sleep: boolean;
-          water: boolean;
-          food: boolean;
-          movement: boolean;
-          connection: boolean;
-          created_at: string;
-        };
-        Insert: Omit<Database['public']['Tables']['daily_checklists']['Row'], 'id' | 'created_at'>;
-        Update: Partial<Database['public']['Tables']['daily_checklists']['Insert']>;
-      };
-      emergency_protocols: {
+          created_at: string
+          id: string
+          is_active: boolean
+          platform: string | null
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          platform?: string | null
+          token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          platform?: string | null
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sobriety_records: {
         Row: {
-          id: string;
-          user_id: string;
-          started_at: string;
-          completed_at: string | null;
-          step_reached: number;
-        };
-        Insert: Omit<Database['public']['Tables']['emergency_protocols']['Row'], 'id'>;
-        Update: Partial<Database['public']['Tables']['emergency_protocols']['Insert']>;
-      };
-    };
-    Views: Record<string, never>;
+          created_at: string
+          end_date: string | null
+          id: string
+          relapse_notes: string | null
+          start_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          relapse_notes?: string | null
+          start_date: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          relapse_notes?: string | null
+          start_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sos_activations: {
+        Row: {
+          actions_taken: string[] | null
+          craving_level: number | null
+          id: string
+          notes: string | null
+          resolved_at: string | null
+          trigger_description: string | null
+          triggered_at: string
+          user_id: string
+        }
+        Insert: {
+          actions_taken?: string[] | null
+          craving_level?: number | null
+          id?: string
+          notes?: string | null
+          resolved_at?: string | null
+          trigger_description?: string | null
+          triggered_at?: string
+          user_id: string
+        }
+        Update: {
+          actions_taken?: string[] | null
+          craving_level?: number | null
+          id?: string
+          notes?: string | null
+          resolved_at?: string | null
+          trigger_description?: string | null
+          triggered_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          plan: string
+          provider: string | null
+          provider_subscription_id: string | null
+          status: string
+          trial_end: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan?: string
+          provider?: string | null
+          provider_subscription_id?: string | null
+          status?: string
+          trial_end?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan?: string
+          provider?: string | null
+          provider_subscription_id?: string | null
+          status?: string
+          trial_end?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      trigger_categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          icon: string | null
+          id: string
+          is_system: boolean
+          name: string
+          user_id: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_system?: boolean
+          name: string
+          user_id?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_system?: boolean
+          name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          biometric_lock: boolean
+          daily_reminder_time: string
+          language: string
+          notification_enabled: boolean
+          quiet_hours_end: string
+          quiet_hours_start: string
+          share_anonymous_data: boolean
+          theme: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          biometric_lock?: boolean
+          daily_reminder_time?: string
+          language?: string
+          notification_enabled?: boolean
+          quiet_hours_end?: string
+          quiet_hours_start?: string
+          share_anonymous_data?: boolean
+          theme?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          biometric_lock?: boolean
+          daily_reminder_time?: string
+          language?: string
+          notification_enabled?: boolean
+          quiet_hours_end?: string
+          quiet_hours_start?: string
+          share_anonymous_data?: boolean
+          theme?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_triggers: {
+        Row: {
+          category_id: string | null
+          coping_strategies: string[] | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          location_lat: number | null
+          location_lng: number | null
+          location_name: string | null
+          people_involved: string[] | null
+          risk_level: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category_id?: string | null
+          coping_strategies?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          location_lat?: number | null
+          location_lng?: number | null
+          location_name?: string | null
+          people_involved?: string[] | null
+          risk_level?: number
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category_id?: string | null
+          coping_strategies?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          location_lat?: number | null
+          location_lng?: number | null
+          location_name?: string | null
+          people_involved?: string[] | null
+          risk_level?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_triggers_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "trigger_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
     Functions: {
-      calculate_sobriety_days: {
-        Args: { user_id: string };
-        Returns: number;
-      };
-    };
+      [_ in never]: never
+    }
     Enums: {
-      plan_type: 'free' | 'essencial' | 'guardiao';
-    };
-  };
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
 }
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends { Row: infer R }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends { Insert: infer I }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends { Update: infer U }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
