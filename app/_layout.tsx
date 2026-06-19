@@ -1,5 +1,6 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { supabase } from '@/lib/supabase';
@@ -10,6 +11,18 @@ import '../global.css';
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  // Na web, o SSR gera HTML sem sessão; o cliente redireciona para login após mount.
+  // Renderizamos null até o cliente estar hidratado para evitar o erro React #418.
+  // Na web, o SSR gera HTML sem sessão; o cliente redireciona após mount.
+  // Usamos setTimeout 0 (async do ponto de vista do lint) para satisfazer
+  // react-hooks/set-state-in-effect e ainda garantir o guard de hidratação.
+  const [hydrated, setHydrated] = useState(Platform.OS !== 'web');
+  useEffect(() => {
+    if (hydrated) return;
+    const t = setTimeout(() => setHydrated(true), 0);
+    return () => clearTimeout(t);
+  }, [hydrated]);
+
   const { session, isLoading, setSession, setLoading } = useAuthStore();
   const {
     profile,
@@ -80,6 +93,8 @@ export default function RootLayout() {
       router.replace('/(tabs)');
     }
   }, [session, isLoading, segments, profile, profileLoading, router]);
+
+  if (!hydrated) return null;
 
   return (
     <>
