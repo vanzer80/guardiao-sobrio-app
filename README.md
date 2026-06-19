@@ -2,7 +2,7 @@
 
 > **Sobriedade não é abstinência. É construção.**
 >
-> Aplicativo (iOS, Android e web) que digitaliza o método **O Guardião Sobrio** — uma estrutura diária de proteção da sobriedade baseada em três pilares: **ESPELHO · TÁTICA · ESCUDO**.
+> Aplicativo iOS + Android que digitaliza o método **O Guardião Sobrio** — uma estrutura diária de proteção da sobriedade baseada em três pilares: **ESPELHO · TÁTICA · ESCUDO**.
 
 O app é o guardião no bolso. Não é o terapeuta, não é o médico. É o escudo no momento crítico.
 
@@ -10,10 +10,12 @@ O app é o guardião no bolso. Não é o terapeuta, não é o médico. É o escu
 
 ## 📚 Documentação / fonte de verdade
 
-Toda a estratégia, método, protocolos, fundamentos e regras de negócio vivem no repositório de conhecimento:
+Estratégia, método, protocolos, fundamentos e regras de negócio vivem no repositório de conhecimento:
 👉 **[`guardiao-sobrio-docs`](https://github.com/vanzer80/guardiao-sobrio-docs)**
 
-O planejamento de execução técnica está em **[`ROADMAP.md`](./ROADMAP.md)**.
+Planejamento de execução técnica: **[`ROADMAP.md`](./ROADMAP.md)**.
+
+> A landing page / web entra como **repositório separado** (`guardiao-sobrio-web`) numa fase futura.
 
 ---
 
@@ -29,13 +31,12 @@ O planejamento de execução técnica está em **[`ROADMAP.md`](./ROADMAP.md)**.
 
 ## 🛠 Stack
 
-- **Mobile:** React Native (Expo) + TypeScript + Expo Router
+- **Framework:** React Native (Expo) + TypeScript + Expo Router
 - **UI:** NativeWind (tokens do design system noir)
 - **Estado:** Zustand · **Forms:** React Hook Form + Zod
 - **Backend:** Supabase (Postgres + Auth + Storage + Edge Functions + Realtime), RLS em todas as tabelas
 - **Offline-first:** WatermelonDB / MMKV
 - **Push:** Expo Notifications + OneSignal
-- **Web:** Next.js 15 + Tailwind v4 (landing/PWA) · Deploy Vercel
 - **Build/CI:** Expo EAS · GitHub Actions · Sentry
 
 ---
@@ -44,12 +45,14 @@ O planejamento de execução técnica está em **[`ROADMAP.md`](./ROADMAP.md)**.
 
 ```
 guardiao-sobrio-app/
-├── apps/
-│   ├── mobile/        # App Expo (iOS + Android)
-│   └── web/           # Next.js (landing / PWA)
-├── packages/          # design-tokens, types compartilhados
-├── design/            # protótipo HTML (referência viva de UI)
-├── ROADMAP.md         # roadmap de execução
+├── app/              # telas e rotas (Expo Router)
+├── components/       # componentes de UI
+├── lib/              # supabase, helpers, regras de negócio
+├── hooks/            # hooks compartilhados (Zustand stores, etc.)
+├── constants/        # design tokens (cores, tipografia, espaçamento)
+├── assets/           # ícones, imagens, fontes
+├── design/           # protótipo HTML (referência viva de UI)
+├── ROADMAP.md
 └── README.md
 ```
 
@@ -57,7 +60,7 @@ guardiao-sobrio-app/
 
 ## 🚀 Começando
 
-> Pré-requisitos: Node 20+, pnpm (ou npm), Expo CLI, conta Supabase.
+> Pré-requisitos: Node 20+, Expo CLI, conta Supabase. App Expo Go no celular (ou simulador iOS/Android).
 
 ```bash
 # 1. Clonar
@@ -65,26 +68,22 @@ git clone https://github.com/vanzer80/guardiao-sobrio-app.git
 cd guardiao-sobrio-app
 
 # 2. Instalar dependências
-pnpm install
+npm install
 
 # 3. Variáveis de ambiente
 cp .env.example .env.local
 # preencha as chaves do Supabase, OneSignal, etc.
 
-# 4. Rodar o app mobile
-pnpm --filter mobile start
-
-# 5. Rodar a web
-pnpm --filter web dev
+# 4. Rodar
+npx expo start
+# pressione i (iOS), a (Android) ou escaneie o QR com o Expo Go
 ```
 
-### Variáveis de ambiente (`.env.local`)
-```
-EXPO_PUBLIC_SUPABASE_URL=
-EXPO_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-ONESIGNAL_APP_ID=
-SENTRY_DSN=
+### Build para as lojas (Expo EAS)
+```bash
+npm install -g eas-cli
+eas build --platform ios
+eas build --platform android
 ```
 
 ---
@@ -128,8 +127,29 @@ Dados de sobriedade nunca são usados para publicidade nem expostos a outros usu
 
 ## 📌 Status
 
-🚧 Em desenvolvimento — Fase 1 (MVP). Veja o progresso em [`ROADMAP.md`](./ROADMAP.md).
+🚧 Em desenvolvimento — Fase 1 (MVP). Progresso em [`ROADMAP.md`](./ROADMAP.md).
 
 ---
 
 *© 2026 Luis Vanzer — O Guardião Sobrio. Todos os direitos reservados.*
+
+
+.env.example
+
+
+# ── Supabase ──────────────────────────────
+# Prefixo EXPO_PUBLIC_ = exposto no app (seguro: URL + chave anônima)
+EXPO_PUBLIC_SUPABASE_URL=https://SEU-PROJETO.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=
+
+# ── Push notifications ────────────────────
+EXPO_PUBLIC_ONESIGNAL_APP_ID=
+
+# ── Observabilidade ───────────────────────
+EXPO_PUBLIC_SENTRY_DSN=
+
+# ──────────────────────────────────────────
+# ATENÇÃO: a SERVICE_ROLE_KEY do Supabase NÃO vai aqui.
+# Ela é secreta e vive só nas Supabase Edge Functions (backend),
+# nunca dentro do app mobile.
+
