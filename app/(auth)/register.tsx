@@ -9,31 +9,50 @@ import { Colors } from '@/constants/Colors';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
-const schema = z.object({
-  email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'Mínimo 6 caracteres'),
-});
+const schema = z
+  .object({
+    email: z.string().email('Email inválido'),
+    password: z.string().min(8, 'Mínimo 8 caracteres'),
+    confirm: z.string(),
+  })
+  .refine((d) => d.password === d.confirm, {
+    message: 'Senhas não coincidem',
+    path: ['confirm'],
+  });
 
 type FormData = z.infer<typeof schema>;
 
-export default function LoginScreen() {
+export default function RegisterScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: '', password: '', confirm: '' },
   });
 
-  const onLogin = async ({ email, password }: FormData) => {
+  const onRegister = async ({ email, password }: FormData) => {
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signUp({ email, password });
     setLoading(false);
 
     if (error) {
-      Alert.alert('Erro ao entrar', error.message);
+      Alert.alert('Erro ao criar conta', error.message);
+      return;
     }
-    // _layout.tsx redireciona automaticamente quando a sessão mudar
+
+    if (!data.session) {
+      // Confirmação de email habilitada no Supabase: ainda não há sessão.
+      Alert.alert(
+        'Confirme seu email',
+        'Enviamos um link de confirmação. Confirme seu email e faça login para continuar.',
+      );
+      router.replace('/(auth)/login');
+      return;
+    }
+
+    // Sessão ativa — segue para o onboarding.
+    router.replace('/(auth)/onboarding');
   };
 
   return (
@@ -42,13 +61,11 @@ export default function LoginScreen() {
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}
         keyboardShouldPersistTaps="handled"
       >
-        <Text
-          style={{ fontFamily: 'CormorantGaramond', color: Colors.gold, fontSize: 40, marginBottom: 4 }}
-        >
-          O Guardião Sóbrio
+        <Text style={{ color: Colors.gold, fontSize: 28, fontWeight: '600', marginBottom: 8 }}>
+          Criar conta
         </Text>
-        <Text style={{ color: Colors.muted, fontSize: 15, marginBottom: 40 }}>
-          Sobriedade não é abstinência. É construção.
+        <Text style={{ color: Colors.muted, fontSize: 15, marginBottom: 36 }}>
+          Seu progresso fica seguro e privado.
         </Text>
 
         <View style={{ gap: 16 }}>
@@ -80,30 +97,37 @@ export default function LoginScreen() {
                 value={value}
                 error={errors.password?.message}
                 secureTextEntry
-                autoComplete="current-password"
+                autoComplete="new-password"
               />
             )}
           />
 
-          <Button title="Entrar" onPress={handleSubmit(onLogin)} loading={loading} />
+          <Controller
+            control={control}
+            name="confirm"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <Input
+                label="Confirmar senha"
+                onChangeText={onChange}
+                onBlur={onBlur}
+                value={value}
+                error={errors.confirm?.message}
+                secureTextEntry
+                autoComplete="new-password"
+              />
+            )}
+          />
+
+          <Button title="Criar conta" onPress={handleSubmit(onRegister)} loading={loading} />
         </View>
 
-        <View style={{ marginTop: 32, alignItems: 'center', gap: 12 }}>
-          <Pressable onPress={() => router.push('/(auth)/register')}>
+        <View style={{ marginTop: 24, alignItems: 'center' }}>
+          <Pressable onPress={() => router.back()}>
             <Text style={{ color: Colors.muted, fontSize: 15 }}>
-              Não tem conta?{' '}
-              <Text style={{ color: Colors.gold }}>Criar conta</Text>
+              Já tenho conta{' '}
+              <Text style={{ color: Colors.gold }}>Entrar</Text>
             </Text>
           </Pressable>
-        </View>
-
-        <View style={{ marginTop: 48, alignItems: 'center', gap: 6 }}>
-          <Text style={{ color: Colors.muted, fontSize: 12 }}>
-            CVV — 188 · CAPS — caps.ms/onde-buscar-ajuda
-          </Text>
-          <Text style={{ color: Colors.muted, fontSize: 11, textAlign: 'center' }}>
-            Este app não substitui psiquiatra, psicólogo ou grupos de apoio.
-          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
