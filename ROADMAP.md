@@ -32,7 +32,7 @@ Estas regras **não podem** ser quebradas por nenhuma demanda de negócio ou pre
 | Estado | Zustand · Formulários: React Hook Form + Zod |
 | Web | Next.js 15 (landing/PWA) + Tailwind v4 · Deploy Vercel |
 | Backend | Supabase (Postgres + Auth + Storage + Edge Functions + Realtime) |
-| Offline | WatermelonDB **ou** MMKV *(decidir — DA2)* |
+| Offline | MMKV *(DA2 resolvida — em uso no cliente Supabase)* |
 | Push | Expo Notifications + OneSignal |
 | Build/CI | Expo EAS · GitHub Actions · Sentry (crash reports) |
 
@@ -40,7 +40,7 @@ Estas regras **não podem** ser quebradas por nenhuma demanda de negócio ou pre
 | # | Decisão | Opções | Prazo |
 |---|---|---|---|
 | DA1 | Gateway de pagamento | Stripe vs Pagar.me | antes do Sprint 5 |
-| DA2 | Storage offline | WatermelonDB vs MMKV | antes do Sprint 1 |
+| ~~DA2~~ | ~~Storage offline~~ | **MMKV** *(resolvida em 19/06/2026)* | ✅ |
 | DA3 | Analytics | PostHog vs Mixpanel vs nenhum | antes da Fase 2 |
 | DA4 | Comunidade | nativa vs Circle vs Discord | antes da Fase 3 |
 | DA5 | Suporte in-app | chat vs email vs nenhum | antes da Fase 2 |
@@ -75,36 +75,41 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 
 ---
 
-## FASE 0 — Preparação · Semanas 1–2
+## FASE 0 — Preparação · Semanas 1–2 ✅ CONCLUÍDA (19/06/2026)
 **Meta:** ambiente mobile pronto + design system validado.
 **Entregável:** app em branco autenticando no Supabase, com schema aplicado.
 
-- [ ] Projeto Supabase (produção + staging)
-- [ ] Projeto Expo (TS + Expo Router)
-- [ ] NativeWind configurado com tokens noir (cores, tipografia, espaçamento)
-- [ ] Supabase Auth no app (email/senha)
-- [ ] Schema inicial + migration (ver `06-modelo-de-dados`)
-- [ ] **RLS em todas as tabelas** de dados de usuário
-- [ ] GitHub Actions: lint + test no PR
-- [ ] `.env.local` / `.env.production`
-- [ ] Sentry configurado
-- [ ] Importar `design/` (protótipo) como referência de UI
-- [ ] Expo EAS configurado (builds iOS + Android)
+- [x] Projeto Supabase criado (`huumwjwndsefdmgezohb`)
+- [x] Projeto Expo (TS + Expo Router)
+- [x] NativeWind configurado com tokens noir (cores, tipografia, espaçamento)
+- [ ] Supabase Auth no app (email/senha) — *Sprint 1*
+- [x] Schema completo — 13 tabelas aplicadas no Supabase
+- [x] **RLS em todas as tabelas** de dados de usuário (28 políticas)
+- [x] GitHub Actions: lint + test no PR
+- [x] `.env.local` preenchido com credenciais do projeto
+- [ ] Sentry configurado — *Sprint 3*
+- [x] `design/` (protótipo HTML) importado como referência de UI
+- [x] Expo EAS configurado (builds iOS + Android)
+- [x] `lib/database.types.ts` gerado do schema real
+- [x] `app/_layout.tsx` com guard de sessão (auth ↔ tabs)
 
 ---
 
 ## FASE 1 — MVP publicável · Semanas 3–8
 **Meta:** app aprovado nas lojas com as features core.
 
-### Sprint 1 (sem. 3–4) — Onboarding + Auth + Checklist
-- [ ] Splash com identidade da marca
-- [ ] Onboarding (3 perguntas → cadastro → boas-vindas personalizada)
-- [ ] Cadastro/Login: email/senha + Google + **Sign in with Apple**
-- [ ] Perfil salvo em `profiles`
-- [ ] Home + contador de dias (de `sobriety_start`, função `calculate_sobriety_days`)
-- [ ] Checklist diário (5 itens, save no DB, micro-animações)
-- [ ] Notificação de lembrete diário (respeitando 23h–7h)
-- **DoD:** checklist salvo no Supabase com RLS; contador correto; 1 checklist/dia (UNIQUE).
+### Sprint 1 (sem. 3–4) — Onboarding + Auth + Checklist ✅ CONCLUÍDO (19/06/2026)
+- [x] Splash com identidade da marca (fundo #0e0d0c + cor ouro via app.json)
+- [x] Onboarding 3 passos: nome → data de sobriedade → foco da substância
+- [x] Login: email/senha funcional (`supabase.auth.signInWithPassword`)
+- [x] Cadastro: email/senha + validação Zod (`supabase.auth.signUp`)
+- [ ] Google OAuth — botão pendente (requer config OAuth no Supabase Dashboard)
+- [ ] Sign in with Apple — pendente (requer `expo-apple-authentication` + Apple Dev Account) ⚠️ obrigatório antes da submissão
+- [x] Perfil salvo em `profiles` (trigger `handle_new_user` + update no onboarding)
+- [x] Home + contador de dias (calculado de `sobriety_start_date`)
+- [x] Checklist diário (5 itens padrão criados no onboarding, save no DB, toggle optimista)
+- [x] Notificação de lembrete diário (respeitando hard rule 23h–7h)
+- **DoD:** ✅ checklist salvo no Supabase com RLS · ✅ contador correto · ✅ 1 checklist/dia (UNIQUE constraint)
 
 ### Sprint 2 (sem. 5–6) — Protocolo de Emergência + Navegação
 - [ ] Botão SOS flutuante (todas as telas, exceto onboarding/config)
