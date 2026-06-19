@@ -127,9 +127,9 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 - [x] **Exclusão de conta (LGPD, 2 toques)** — Edge Function `delete-account` via admin API
 - [x] Links CVV (188) e CAPS tappable em Perfil e Protocolo
 - [x] Aviso ético em todos os protocolos
-- [ ] Testes em iOS e Android físicos
-- [ ] **Submissão App Store + Google Play**
-- [ ] Documentação de release (changelog, notas)
+- [ ] Testes em iOS e Android físicos ⚠️ **PENDENTE** — requer dispositivo físico
+- [ ] **Submissão App Store + Google Play** ⚠️ **PENDENTE** — requer Apple/Google Developer account
+- [ ] Documentação de release (changelog, notas) ⚠️ **PENDENTE**
 - **DoD:** app aprovado nas lojas · crash-free rate > 99,5% · startup < 2s.
 
 ---
@@ -138,11 +138,12 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 **Meta:** ativar monetização, aprofundar o método e iniciar a web.
 **Nota:** Landing page (`guardiao-sobrio-web`, repo separado) pode começar em paralelo no Sprint 5, sem bloquear o mobile.
 
-### Sprint 4 — Diário + Fundamentos
-- [ ] Diário de Prompts (CRUD, 1 prompt/dia, mín. 50 chars, entradas não deletáveis)
-- [ ] Rotação por pilar (ESPELHO seg/qui · TÁTICA ter/sex · ESCUDO qua/sáb · dom livre)
-- [ ] 13 Fundamentos (lista + detalhe + "aplicado hoje")
-- [ ] Fundamento do Dia
+### Sprint 4 — Diário + Fundamentos ✅ CONCLUÍDO (19/06/2026)
+- [x] Diário de Prompts (1 prompt/dia, mín. 50 chars, entradas não deletáveis, salvo em `diary_entries`)
+- [x] Rotação por pilar (ESPELHO seg/qui · TÁTICA ter/sex · ESCUDO qua/sáb · dom livre) — dinâmico por dia da semana
+- [x] 13 Fundamentos (lista expansível + descrição + "Aplicar hoje" toggle) em `metodo.tsx`
+- [x] Fundamento do Dia (rotação por dias de sobriedade % 13)
+- **Conteúdo:** textos dos fundamentos são placeholders — substituir pelo conteúdo definitivo do `guardiao-sobrio-docs`
 
 ### Sprint 5 — Monetização
 - [ ] Gateway (DA1) + webhook Supabase Edge → `profiles.plan`

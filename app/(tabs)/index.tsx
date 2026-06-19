@@ -7,17 +7,21 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  TextInput,
 } from 'react-native';
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { daysSince, todayISO } from '@/lib/sobriety';
 import { getMilestoneLabel } from '@/lib/protocolo';
+import { getPilarHoje, getPromptHoje } from '@/lib/fundamentos';
+import { loadEntryToday, saveEntryToday, extractText, MIN_CHARS } from '@/lib/diario';
 import { Colors } from '@/constants/Colors';
 import type { Tables } from '@/lib/database.types';
 
 type ChecklistItem = Tables<'checklist_items'>;
 type Completion = Tables<'checklist_completions'>;
 type Profile = Tables<'profiles'>;
+type DiaryEntry = Tables<'diary_entries'>;
 
 function formatDate(d: Date): string {
   return d.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -30,6 +34,13 @@ export default function HojeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [toggling, setToggling] = useState<Set<string>>(new Set());
+  const [diaryEntry, setDiaryEntry] = useState<DiaryEntry | null>(null);
+  const [diaryText, setDiaryText] = useState('');
+  const [diarySaving, setDiarySaving] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  const pilarHoje = getPilarHoje();
+  const promptHoje = getPromptHoje(new Date().getDate());
 
   const loadData = useCallback(async () => {
     try {
@@ -38,29 +49,32 @@ export default function HojeScreen() {
       } = await supabase.auth.getSession();
       if (!session) return;
 
-      const userId = session.user.id;
+      const uid = session.user.id;
+      setUserId(uid);
       const today = todayISO();
 
-      const [profileRes, itemsRes, completionsRes] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
+      const [profileRes, itemsRes, completionsRes, entryRes] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', uid).maybeSingle(),
         supabase
           .from('checklist_items')
           .select('*')
-          .eq('user_id', userId)
+          .eq('user_id', uid)
           .eq('is_active', true)
           .order('sort_order'),
         supabase
           .from('checklist_completions')
           .select('*')
-          .eq('user_id', userId)
+          .eq('user_id', uid)
           .eq('completed_date', today),
+        loadEntryToday(uid),
       ]);
 
       setProfile(profileRes.data ?? null);
       setItems(itemsRes.data ?? []);
       setCompletions(completionsRes.data ?? []);
+      setDiaryEntry(entryRes);
+      setDiaryText(extractText(entryRes));
     } finally {
-      // Garante que o spinner saia em qualquer caminho (inclusive sessão nula).
       setLoading(false);
       setRefreshing(false);
     }
@@ -131,6 +145,19 @@ export default function HojeScreen() {
       next.delete(itemId);
       return next;
     });
+  };
+
+  const handleSaveDiary = async () => {
+    if (!userId) return;
+    setDiarySaving(true);
+    const { error } = await saveEntryToday(userId, diaryText);
+    setDiarySaving(false);
+    if (error) {
+      Alert.alert('Não foi possível salvar', error);
+    } else {
+      const updated = await loadEntryToday(userId);
+      setDiaryEntry(updated);
+    }
   };
 
   if (loading) {
@@ -319,6 +346,90 @@ export default function HojeScreen() {
             </View>
           )}
         </View>
+
+        {/* Reflexão do Dia */}
+        <View style={{ marginTop: 32 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <Text style={{ color: Colors.muted, fontSize: 12, letterSpacing: 0.8 }}>
+              REFLEXÃO DO DIA · {pilarHoje}
+            </Text>
+            {diaryEntry && (
+              <Text style={{ color: Colors.success, fontSize: 11 }}>✓ salvo</Text>
+            )}
+          </View>
+
+          <Text style={{ color: Colors.text, fontSize: 15, lineHeight: 22, marginBottom: 16, fontStyle: 'italic' }}>
+            {promptHoje}
+          </Text>
+
+          {diaryEntry ? (
+            <View
+              style={{
+                backgroundColor: Colors.surface,
+                borderRadius: 12,
+                padding: 16,
+                borderWidth: 1,
+                borderColor: Colors.border,
+              }}
+            >
+              <Text style={{ color: Colors.text, fontSize: 14, lineHeight: 22 }}>
+                {extractText(diaryEntry)}
+              </Text>
+              <Text style={{ color: Colors.muted, fontSize: 11, marginTop: 8 }}>
+                Entradas do diário não podem ser editadas ou excluídas.
+              </Text>
+            </View>
+          ) : (
+            <View>
+              <TextInput
+                value={diaryText}
+                onChangeText={setDiaryText}
+                placeholder="Escreva sua reflexão aqui..."
+                placeholderTextColor={Colors.muted}
+                multiline
+                textAlignVertical="top"
+                style={{
+                  backgroundColor: Colors.surface,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: Colors.border,
+                  padding: 16,
+                  color: Colors.text,
+                  fontSize: 14,
+                  lineHeight: 22,
+                  minHeight: 120,
+                }}
+              />
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                <Text style={{
+                  fontSize: 12,
+                  color: diaryText.trim().length >= MIN_CHARS ? Colors.success : Colors.muted,
+                }}>
+                  {diaryText.trim().length}/{MIN_CHARS} caracteres mínimos
+                </Text>
+                <Pressable
+                  onPress={handleSaveDiary}
+                  disabled={diarySaving || diaryText.trim().length < MIN_CHARS}
+                  style={{
+                    backgroundColor: diaryText.trim().length >= MIN_CHARS ? Colors.gold : Colors.border,
+                    paddingHorizontal: 20,
+                    paddingVertical: 10,
+                    borderRadius: 10,
+                  }}
+                >
+                  {diarySaving
+                    ? <ActivityIndicator size="small" color={Colors.bg} />
+                    : <Text style={{ color: Colors.bg, fontWeight: '600', fontSize: 14 }}>Salvar</Text>
+                  }
+                </Pressable>
+              </View>
+            </View>
+          )}
+        </View>
+
+        <Text style={{ color: Colors.muted, fontSize: 11, textAlign: 'center', marginTop: 40, marginBottom: 8 }}>
+          Este app não substitui psiquiatra, psicólogo ou grupos de apoio.
+        </Text>
       </ScrollView>
     </SafeAreaView>
   );
