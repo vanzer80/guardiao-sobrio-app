@@ -7,6 +7,7 @@ import {
   FUNDAMENTOS,
   getPilarHoje,
   getFundamentoDodia,
+  isFundamentoLocked,
   type Fundamento,
 } from '@/lib/fundamentos';
 
@@ -48,6 +49,7 @@ export default function MetodoScreen() {
   const pilarHoje = getPilarHoje();
   const pilarMeta = PILAR_META[pilarHoje];
   const fundamentoHoje = getFundamentoDodia(days);
+  const isPremium = profile?.is_premium ?? false;
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [aplicados, setAplicados] = useState<Set<number>>(new Set());
 
@@ -145,6 +147,7 @@ export default function MetodoScreen() {
           f={fundamentoHoje}
           expanded={expandedId === fundamentoHoje.id}
           aplicado={aplicados.has(fundamentoHoje.id)}
+          locked={false}
           onToggleExpand={() => setExpandedId(expandedId === fundamentoHoje.id ? null : fundamentoHoje.id)}
           onToggleAplicado={() => toggleAplicado(fundamentoHoje.id)}
           highlight
@@ -155,17 +158,41 @@ export default function MetodoScreen() {
           OS 13 FUNDAMENTOS
         </Text>
         <View style={{ gap: 8 }}>
-          {FUNDAMENTOS.map((f) => (
-            <FundamentoCard
-              key={f.id}
-              f={f}
-              expanded={expandedId === f.id}
-              aplicado={aplicados.has(f.id)}
-              onToggleExpand={() => setExpandedId(expandedId === f.id ? null : f.id)}
-              onToggleAplicado={() => toggleAplicado(f.id)}
-            />
-          ))}
+          {FUNDAMENTOS.map((f) => {
+            const locked = isFundamentoLocked(f.id, isPremium);
+            return (
+              <FundamentoCard
+                key={f.id}
+                f={f}
+                expanded={!locked && expandedId === f.id}
+                aplicado={aplicados.has(f.id)}
+                locked={locked}
+                onToggleExpand={() => {
+                  if (locked) return;
+                  setExpandedId(expandedId === f.id ? null : f.id);
+                }}
+                onToggleAplicado={() => toggleAplicado(f.id)}
+              />
+            );
+          })}
         </View>
+        {!isPremium && (
+          <View style={{
+            marginTop: 16,
+            padding: 16,
+            borderRadius: 12,
+            backgroundColor: `${Colors.gold}0d`,
+            borderWidth: 1,
+            borderColor: `${Colors.gold}33`,
+          }}>
+            <Text style={{ color: Colors.gold, fontSize: 13, fontWeight: '600', marginBottom: 4 }}>
+              10 fundamentos bloqueados
+            </Text>
+            <Text style={{ color: Colors.muted, fontSize: 13 }}>
+              Planos Essential e Guardião desbloqueiam todos os 13 fundamentos.
+            </Text>
+          </View>
+        )}
 
         <Text style={{ color: Colors.muted, fontSize: 12, textAlign: 'center', marginTop: 40, fontStyle: 'italic' }}>
           Este app não substitui psiquiatra, psicólogo ou grupos de apoio.
@@ -176,11 +203,12 @@ export default function MetodoScreen() {
 }
 
 function FundamentoCard({
-  f, expanded, aplicado, onToggleExpand, onToggleAplicado, highlight = false,
+  f, expanded, aplicado, locked, onToggleExpand, onToggleAplicado, highlight = false,
 }: {
   f: Fundamento;
   expanded: boolean;
   aplicado: boolean;
+  locked: boolean;
   onToggleExpand: () => void;
   onToggleAplicado: () => void;
   highlight?: boolean;
@@ -193,7 +221,7 @@ function FundamentoCard({
         borderWidth: 1,
         borderColor: highlight ? `${Colors.gold}44` : Colors.border,
         overflow: 'hidden',
-        marginBottom: highlight ? 0 : 0,
+        opacity: locked ? 0.5 : 1,
       }}
     >
       <Pressable
@@ -207,12 +235,31 @@ function FundamentoCard({
             {f.pilar}
           </Text>
         </View>
-        <Text style={{ color: Colors.muted, fontSize: 16 }}>{expanded ? '−' : '+'}</Text>
+        <Text style={{ color: Colors.muted, fontSize: 16 }}>
+          {locked ? '🔒' : expanded ? '−' : '+'}
+        </Text>
       </Pressable>
 
       {expanded && (
         <View style={{ paddingHorizontal: 16, paddingBottom: 16, gap: 12 }}>
+          {/* Insight */}
+          <Text style={{ color: Colors.text, fontSize: 14, lineHeight: 22, fontStyle: 'italic' }}>
+            {`“${f.insight}”`}
+          </Text>
+          {/* Descrição */}
           <Text style={{ color: Colors.muted, fontSize: 14, lineHeight: 22 }}>{f.descricao}</Text>
+          {/* Ação mínima */}
+          <View style={{ backgroundColor: Colors.surfaceRaised, borderRadius: 10, padding: 12, gap: 4 }}>
+            <Text style={{ color: Colors.gold, fontSize: 11, fontWeight: '600', letterSpacing: 0.5 }}>
+              AÇÃO MÍNIMA
+            </Text>
+            <Text style={{ color: Colors.text, fontSize: 13, lineHeight: 20 }}>{f.acaoMinima}</Text>
+          </View>
+          {/* Frase de âncora */}
+          <Text style={{ color: Colors.gold, fontSize: 13, fontStyle: 'italic', textAlign: 'center' }}>
+            {`"${f.fraseAncora}"`}
+          </Text>
+          {/* Botão aplicar hoje */}
           <Pressable
             onPress={onToggleAplicado}
             style={{

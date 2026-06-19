@@ -362,69 +362,59 @@ export default function HojeScreen() {
             {promptHoje}
           </Text>
 
-          {diaryEntry ? (
-            <View
+          {/* Diário: editável mesmo após salvar (apenas não deletável) */}
+          <View>
+            <TextInput
+              value={diaryText}
+              onChangeText={setDiaryText}
+              placeholder="Escreva sua reflexão aqui..."
+              placeholderTextColor={Colors.muted}
+              multiline
+              textAlignVertical="top"
               style={{
                 backgroundColor: Colors.surface,
                 borderRadius: 12,
-                padding: 16,
                 borderWidth: 1,
-                borderColor: Colors.border,
+                borderColor: diaryEntry ? Colors.border : Colors.border,
+                padding: 16,
+                color: Colors.text,
+                fontSize: 14,
+                lineHeight: 22,
+                minHeight: 120,
               }}
-            >
-              <Text style={{ color: Colors.text, fontSize: 14, lineHeight: 22 }}>
-                {extractText(diaryEntry)}
+            />
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+              <Text style={{
+                fontSize: 12,
+                color: diaryText.trim().length >= MIN_CHARS ? Colors.success : Colors.muted,
+              }}>
+                {diaryText.trim().length}/{MIN_CHARS} mín.
+                {diaryEntry ? ' · editável' : ''}
               </Text>
-              <Text style={{ color: Colors.muted, fontSize: 11, marginTop: 8 }}>
-                Entradas do diário não podem ser editadas ou excluídas.
-              </Text>
-            </View>
-          ) : (
-            <View>
-              <TextInput
-                value={diaryText}
-                onChangeText={setDiaryText}
-                placeholder="Escreva sua reflexão aqui..."
-                placeholderTextColor={Colors.muted}
-                multiline
-                textAlignVertical="top"
+              <Pressable
+                onPress={handleSaveDiary}
+                disabled={diarySaving || diaryText.trim().length < MIN_CHARS}
                 style={{
-                  backgroundColor: Colors.surface,
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: Colors.border,
-                  padding: 16,
-                  color: Colors.text,
-                  fontSize: 14,
-                  lineHeight: 22,
-                  minHeight: 120,
+                  backgroundColor: diaryText.trim().length >= MIN_CHARS ? Colors.gold : Colors.border,
+                  paddingHorizontal: 20,
+                  paddingVertical: 10,
+                  borderRadius: 10,
                 }}
-              />
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-                <Text style={{
-                  fontSize: 12,
-                  color: diaryText.trim().length >= MIN_CHARS ? Colors.success : Colors.muted,
-                }}>
-                  {diaryText.trim().length}/{MIN_CHARS} caracteres mínimos
-                </Text>
-                <Pressable
-                  onPress={handleSaveDiary}
-                  disabled={diarySaving || diaryText.trim().length < MIN_CHARS}
-                  style={{
-                    backgroundColor: diaryText.trim().length >= MIN_CHARS ? Colors.gold : Colors.border,
-                    paddingHorizontal: 20,
-                    paddingVertical: 10,
-                    borderRadius: 10,
-                  }}
-                >
-                  {diarySaving
-                    ? <ActivityIndicator size="small" color={Colors.bg} />
-                    : <Text style={{ color: Colors.bg, fontWeight: '600', fontSize: 14 }}>Salvar</Text>
-                  }
-                </Pressable>
-              </View>
+              >
+                {diarySaving
+                  ? <ActivityIndicator size="small" color={Colors.bg} />
+                  : <Text style={{ color: Colors.bg, fontWeight: '600', fontSize: 14 }}>
+                      {diaryEntry ? 'Atualizar' : 'Salvar'}
+                    </Text>
+                }
+              </Pressable>
             </View>
-          )}
+            {diaryEntry && (
+              <Text style={{ color: Colors.muted, fontSize: 11, marginTop: 4 }}>
+                Entradas podem ser editadas, mas não excluídas.
+              </Text>
+            )}
+          </View>
         </View>
 
         <Text style={{ color: Colors.muted, fontSize: 11, textAlign: 'center', marginTop: 40, marginBottom: 8 }}>
