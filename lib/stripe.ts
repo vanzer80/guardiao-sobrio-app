@@ -2,34 +2,15 @@
  * Stripe configuration & helpers for O Guardião Sobrio
  *
  * Stripe handles payment processing for Essential (R$19,90/mês) and Guardian (R$39,90/mês) plans.
- * All card processing and webhooks are PCI-DSS compliant via Stripe.
+ * Checkout flow uses URL redirect (Stripe Hosted Checkout) — no native SDK components required.
  *
  * Hard rule: Never store sensitive payment data locally. Always use Stripe API.
  */
 
-import { initStripe } from '@stripe/stripe-react-native';
-
-// Initialize Stripe SDK
-export async function initializeStripe() {
-  const publishableKey = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-
-  if (!publishableKey) {
-    console.error('Stripe publishable key not configured');
-    return false;
-  }
-
-  try {
-    await initStripe({
-      publishableKey,
-      // Merchant ID for Apple Pay (if supported)
-      merchantIdentifier: 'guardiao.sobrio',
-    });
-
-    return true;
-  } catch (error) {
-    console.error('Stripe initialization error:', error);
-    return false;
-  }
+// Validates that the Stripe publishable key is configured before showing the paywall.
+// URL-redirect checkout does not require SDK initialization.
+export async function initializeStripe(): Promise<boolean> {
+  return validateStripeConfig();
 }
 
 /**
