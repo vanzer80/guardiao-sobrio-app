@@ -261,9 +261,15 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 - [x] Migration: `family_connections.invitation_expires_at`
 - **DoD:** ✅ typecheck verde · ✅ lint verde · ✅ hard rules auditadas
 
-### Sprint 7 — Estatísticas
-- [ ] Relatório semanal · gráficos de progresso (sem gamificação punitiva)
-- [ ] Exportar PDF (para compartilhar com terapeuta)
+### Sprint 7 — Estatísticas ✅ CONCLUÍDO (19/06/2026)
+- [x] Cards resumo: dias em jornada, checklist 28d, diário 30d, SOS mês
+- [x] Grid 28 dias: checklist (verde) e diário (ouro) separados — sem punição por faltas
+- [x] Barra de progresso: presença no checklist (sem destaque negativo)
+- [x] SOS este mês: exibido com tom de autocuidado, não de fraqueza
+- [x] Exportar PDF: expo-print + expo-sharing → compartilhar com terapeuta
+- [x] Paywall suave para plano free (link para planos)
+- [x] Navegação: link "Ver estatísticas" em Perfil → tela /stats
+- **DoD:** ✅ typecheck verde · ✅ lint verde · ✅ zero gamificação punitiva
 
 ---
 
