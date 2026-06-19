@@ -10,10 +10,31 @@ O app é o guardião no bolso. Não é o terapeuta, não é o médico. É o escu
 
 ## 📚 Documentação / fonte de verdade
 
-Estratégia, método, protocolos, fundamentos e regras de negócio vivem no repositório de conhecimento:
-👉 **[`guardiao-sobrio-docs`](https://github.com/vanzer80/guardiao-sobrio-docs)**
+| O quê | Onde |
+|---|---|
+| Método, conteúdo, protocolos, regras de negócio e marca | 👉 [`guardiao-sobrio-docs`](https://github.com/vanzer80/guardiao-sobrio-docs) (público) |
+| Execução técnica, sprints e decisões abertas | [`ROADMAP.md`](./ROADMAP.md) |
 
-Planejamento de execução técnica: **[`ROADMAP.md`](./ROADMAP.md)**.
+### ⚠️ Regra para quem desenvolve
+
+> **Consulte `guardiao-sobrio-docs` antes de implementar qualquer conteúdo.**
+> Textos dos fundamentos, prompts diários, protocolos de emergência, regras de planos (free/pago), fluxos de telas e copy de marca vivem exclusivamente nesse repositório.
+> Nunca improvise conteúdo ou regras de negócio sem verificar a fonte.
+
+```bash
+# Leitura rápida de qualquer arquivo do docs repo via CLI:
+gh api repos/vanzer80/guardiao-sobrio-docs/contents/<caminho> --jq '.content' | base64 -d
+```
+
+Arquivos mais usados no desenvolvimento:
+
+| Necessidade | Arquivo no docs repo |
+|---|---|
+| Textos dos 13 Fundamentos | `fundamentos/13-fundamentos.md` |
+| Regras de planos e limites free/pago | `app/07-regras-de-negocio.md` |
+| Fluxos de telas e navegação | `app/05-fluxos-e-telas.md` |
+| Protocolos de emergência | `protocolos/` |
+| Tom de voz e copy | `marca/manual-de-marca.md` |
 
 > A landing page / web entra como **repositório separado** (`guardiao-sobrio-web`) numa fase futura.
 
