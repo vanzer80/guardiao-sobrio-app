@@ -3,8 +3,35 @@
 > Do protótipo de design até o lançamento nas lojas (App Store + Google Play).
 > Versão 1.0 — Junho 2026 · Owner: Luis Vanzer
 >
-> **Fonte de verdade de conteúdo/marca:** repositório `guardiao-sobrio-docs`.
+> **Fonte de verdade de conteúdo/marca:** [`guardiao-sobrio-docs`](https://github.com/vanzer80/guardiao-sobrio-docs) (repositório público).
 > Este arquivo vive no repositório do **app** e governa a execução técnica.
+
+---
+
+## Repositório de Documentação — Fonte de Verdade
+
+> **URL:** https://github.com/vanzer80/guardiao-sobrio-docs (público, acesso via `gh` CLI)
+
+O repositório `guardiao-sobrio-docs` é a **única fonte autorizada** de conteúdo, regras de negócio e identidade de marca.
+Deve ser consultado **antes de implementar** qualquer um dos itens abaixo:
+
+| O que implementar | Onde consultar no docs |
+|---|---|
+| Textos dos 13 Fundamentos (insight, ação mínima, frase de âncora) | `fundamentos/13-fundamentos.md` |
+| Prompts diários por pilar (ESPELHO / TÁTICA / ESCUDO / LIVRE) | `fundamentos/13-fundamentos.md` |
+| Protocolo de Emergência 72h (PARE → RESPIRE → CONTATO → MOVIMENTO → ESTRUTURA) | `protocolos/protocolo-emergencia-72h.md` |
+| Protocolo Perímetro 24h e Segurança 24h | `protocolos/` |
+| Protocolo de Recaída | `protocolos/protocolo-recaida.md` |
+| Regras de planos (free / Essential / Guardião) e limites de acesso | `app/07-regras-de-negocio.md` |
+| Fluxos de telas e navegação | `app/05-fluxos-e-telas.md` |
+| Especificação de features | `app/03-funcionalidades.md` |
+| Tom de voz, copy, o que é proibido dizer | `marca/manual-de-marca.md` |
+| Posicionamento e proposta de valor | `marca/briefing-executivo.md` |
+
+**Como acessar via CLI:**
+```bash
+gh api repos/vanzer80/guardiao-sobrio-docs/contents/<caminho> --jq '.content' | base64 -d
+```
 
 ---
 
