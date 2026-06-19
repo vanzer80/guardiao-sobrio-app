@@ -43,3 +43,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Claude Code — versiona skills + settings do projeto, ignora config pessoal/da máquina
+.claude/settings.local.json
