@@ -11,6 +11,7 @@ import {
   TextInput,
 } from 'react-native';
 import { useEffect, useState, useRef } from 'react';
+import { useRouter } from 'expo-router';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { isBiometricLockEnabled, setBiometricLockEnabled } from '@/lib/appLock';
 import { supabase } from '@/lib/supabase';
@@ -26,6 +27,7 @@ type Profile = Tables<'profiles'>;
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
 export default function PerfilScreen() {
+  const router = useRouter();
   const { profile: storeProfile, setProfile: setStoreProfile } = useProfileStore();
   const [profile, setProfile] = useState<Profile | null>(storeProfile);
   const [loading, setLoading] = useState(!storeProfile);
@@ -255,6 +257,29 @@ export default function PerfilScreen() {
               : '—',
           },
         ]} />
+
+        {/* Progresso */}
+        <SectionTitle>Progresso</SectionTitle>
+        <Pressable
+          onPress={() => router.push('/stats')}
+          style={{
+            backgroundColor: Colors.surface,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            padding: 16,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 24,
+          }}
+        >
+          <View>
+            <Text style={{ color: Colors.text, fontWeight: '600', fontSize: 15 }}>Ver estatísticas</Text>
+            <Text style={{ color: Colors.muted, fontSize: 12, marginTop: 2 }}>Checklist, diário e relatório PDF</Text>
+          </View>
+          <Text style={{ color: Colors.gold, fontSize: 18 }}>→</Text>
+        </Pressable>
 
         {/* Configurações */}
         <SectionTitle>Configurações</SectionTitle>
