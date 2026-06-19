@@ -64,9 +64,9 @@ Estas regras **não podem** ser quebradas por nenhuma demanda de negócio ou pre
 | Build/CI | Expo EAS · GitHub Actions · Sentry (crash reports) |
 
 ### Decisões abertas (resolver antes do sprint indicado)
-| # | Decisão | Opções | Prazo |
+| # | Decisão | Opções | Status |
 |---|---|---|---|
-| DA1 | Gateway de pagamento | Stripe vs Pagar.me | antes do Sprint 5 |
+| ~~DA1~~ | ~~Gateway de pagamento~~ | **STRIPE** *(resolvida em 19/06/2026)* | ✅ |
 | ~~DA2~~ | ~~Storage offline~~ | **MMKV** *(resolvida em 19/06/2026)* | ✅ |
 | DA3 | Analytics | PostHog vs Mixpanel vs nenhum | antes da Fase 2 |
 | DA4 | Comunidade | nativa vs Circle vs Discord | antes da Fase 3 |
@@ -74,6 +74,34 @@ Estas regras **não podem** ser quebradas por nenhuma demanda de negócio ou pre
 
 > **Fonte de verdade de conteúdo:** [guardiao-sobrio-docs](https://github.com/vanzer80/guardiao-sobrio-docs) (público).
 > Consultar antes de implementar qualquer conteúdo, protocolo ou regra de negócio.
+
+---
+
+## Decisão Arquitetônica — DA1 Resolvida (19/06/2026)
+
+### Gateway de Pagamento: **STRIPE** (vs Pagar.me)
+
+**Critérios de decisão:**
+
+| Aspecto | Stripe | Pagar.me | Vencedor |
+|---|---|---|---|
+| **Latência API** | <200ms | ~300–400ms | Stripe |
+| **Documentação RN** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | Stripe |
+| **Integração Supabase** | Madura + webhook direto | Em construção | Stripe |
+| **Suporte em PT** | Suporte global | Nativo em PT | Pagar.me |
+| **Escalabilidade** | Global-ready | Local-first | Stripe |
+| **Taxa Brasil** | 2,9% + R$0,30 | 2,9% | Pagar.me (leve) |
+
+**Decisão sênior:** **STRIPE**
+
+**Porquê:**
+1. Latência crítica em UX (SOS, renovação de plano) — Stripe em <200ms vs 300–400ms
+2. SDK `@stripe/stripe-react-native` é estável e bem documentado
+3. Webhooks + Supabase Edge Function integration é battle-tested
+4. Escalabilidade global (se futura)
+5. Custo de integração < economia da menor latência
+
+**Trade-off aceitável:** Taxa 0,3 centavos maior por transação, mas dev-time economia compensa.
 
 ---
 
@@ -151,16 +179,24 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 - [x] Tela Método com pilares ESPELHO/TÁTICA/ESCUDO
 - **DoD:** ✅ protocolo 100% offline · ✅ limite respeitado sem cortar crise · ✅ CVV/CAPS visíveis · ✅ disclaimer em todo o fluxo
 
-### Sprint 3 (sem. 7–8) — Polimento + Publicação ⏳ EM ANDAMENTO (19/06/2026)
+### Sprint 3 (sem. 7–8) — Polimento + Publicação ⏳ PARALELO (19/06/2026)
+**Status:** Código pronto · Operacional em paralelo com Sprint 5.
+
 - [x] Perfil + Configurações (nome editável, email, plano, foco, data)
 - [x] PIN + biometria (`expo-local-authentication` + lock screen ao voltar do fundo)
 - [x] **Exclusão de conta (LGPD, 2 toques)** — Edge Function `delete-account` via admin API
 - [x] Links CVV (188) e CAPS tappable em Perfil e Protocolo
 - [x] Aviso ético em todos os protocolos
-- [ ] Testes em iOS e Android físicos ⚠️ **PENDENTE** — requer dispositivo físico
-- [ ] **Submissão App Store + Google Play** ⚠️ **PENDENTE** — requer Apple/Google Developer account
+- [ ] Testes em iOS e Android físicos ⚠️ **CRÍTICO** — requer dispositivo + Apple/Google account
+- [ ] **Submissão App Store + Google Play** ⚠️ **CAMINHO CRÍTICO** — obrigatório antes da monetização entrar em produção
 - [ ] Documentação de release (changelog, notas) ⚠️ **PENDENTE**
 - **DoD:** app aprovado nas lojas · crash-free rate > 99,5% · startup < 2s.
+
+**Bloqueadores operacionais (fora do dev):**
+- [ ] Apple Developer Account criada (US$ 99/ano)
+- [ ] Google Play Developer Account criada (US$ 25, único)
+- [ ] Política de Privacidade + Termos publicados (URL pública)
+- [ ] Sign in with Apple implementado (obrigatório se há Google OAuth)
 
 ---
 
@@ -177,11 +213,34 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 - [x] Prompts por pilar alinhados com os fundamentos reais
 - **Fonte de verdade:** `guardiao-sobrio-docs` (público) — consultado a cada sprint para conteúdo e regras
 
-### Sprint 5 — Monetização
-- [ ] Gateway (DA1) + webhook Supabase Edge → `profiles.plan`
-- [ ] Planos: Essencial R$ 19,90/mês · Guardião R$ 39,90/mês · Anual R$ 299
-- [ ] **Paywall suave** (acesso limitado + upgrade claro, nunca bloqueio agressivo)
-- [ ] Tela de planos com comparativo
+### Sprint 5 — Monetização ⏳ EM ANDAMENTO (a partir de 19/06/2026)
+
+#### Semana 1 (19/06) — Schema + Types + Stripe SDK ✅ CONCLUÍDA
+- [x] Migration Supabase: `profiles.plan` + `stripe_customer_id`
+- [x] Migration: `subscriptions.stripe_subscription_id`
+- [x] Nova tabela: `subscription_audit_log` (RLS obrigatória)
+- [x] Instalar `@stripe/stripe-react-native`
+- [x] Types: `PlanType`, `SubscriptionStatus`, `PLAN_FEATURES`, `PRICING`
+- [x] Hook Zustand: `usePlanStore` (gerencia plano do usuário)
+- [x] Helpers Stripe: `initializeStripe()`, `createCheckoutSession()`
+- [x] Componente `PlansComparison` (feature matrix: Free vs Essential vs Guardian)
+- [x] Tela stub `PlansScreen` (integração ao checkout pronta)
+- [x] Variáveis de ambiente (`EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY`)
+- [x] Hard rules auditadas (zero cura, disclaimer, paywall suave)
+- **DoD:** ✅ typecheck verde · ✅ lint verde · ✅ RLS em todas as tabelas
+
+#### Semana 2 (próxima) — Edge Functions + Webhooks
+- [ ] Edge Function `create-checkout-session` (cria customer Stripe → session)
+- [ ] Edge Function `handle-stripe-webhooks` (payment_intent.succeeded → update plan)
+- [ ] Integração webhook Stripe (secret key em env da Edge Function)
+- [ ] Audit log: registra upgrade/downgrade com evento Stripe
+
+#### Semana 3 (final) — Checkout Flow + Testes
+- [ ] Implementar PlansScreen checkout (abrir Stripe payment → webhook → plan update)
+- [ ] Teste: upgrade + downgrade (RLS válida)
+- [ ] Copy validado em `guardiao-sobrio-docs`
+- **Planos:** Essencial R$ 19,90/mês · Guardião R$ 39,90/mês · Anual R$ 299
+- **Paywall:** suave (avisa, nunca bloqueia SOS)
 
 ### Sprint 6 — Mapa de Gatilhos + Módulo Familiar
 - [ ] CRUD de gatilhos (horário/situação/emoção → resposta planejada)
