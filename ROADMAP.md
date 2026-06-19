@@ -45,6 +45,9 @@ Estas regras **não podem** ser quebradas por nenhuma demanda de negócio ou pre
 | DA4 | Comunidade | nativa vs Circle vs Discord | antes da Fase 3 |
 | DA5 | Suporte in-app | chat vs email vs nenhum | antes da Fase 2 |
 
+> **Fonte de verdade de conteúdo:** [guardiao-sobrio-docs](https://github.com/vanzer80/guardiao-sobrio-docs) (público).
+> Consultar antes de implementar qualquer conteúdo, protocolo ou regra de negócio.
+
 ---
 
 ## 2. Estrutura de repositórios
@@ -139,11 +142,13 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 **Nota:** Landing page (`guardiao-sobrio-web`, repo separado) pode começar em paralelo no Sprint 5, sem bloquear o mobile.
 
 ### Sprint 4 — Diário + Fundamentos ✅ CONCLUÍDO (19/06/2026)
-- [x] Diário de Prompts (1 prompt/dia, mín. 50 chars, entradas não deletáveis, salvo em `diary_entries`)
+- [x] Diário de Prompts (1 prompt/dia, mín. 50 chars, editável mas não deletável, salvo em `diary_entries`)
 - [x] Rotação por pilar (ESPELHO seg/qui · TÁTICA ter/sex · ESCUDO qua/sáb · dom livre) — dinâmico por dia da semana
-- [x] 13 Fundamentos (lista expansível + descrição + "Aplicar hoje" toggle) em `metodo.tsx`
+- [x] 13 Fundamentos com conteúdo definitivo do `guardiao-sobrio-docs` (insight, descrição, ação mínima, armadilha, frase de âncora)
 - [x] Fundamento do Dia (rotação por dias de sobriedade % 13)
-- **Conteúdo:** textos dos fundamentos são placeholders — substituir pelo conteúdo definitivo do `guardiao-sobrio-docs`
+- [x] Lock free: apenas fundamentos 1–3 desbloqueados no plano gratuito (4–13 com cadeado)
+- [x] Prompts por pilar alinhados com os fundamentos reais
+- **Fonte de verdade:** `guardiao-sobrio-docs` (público) — consultado a cada sprint para conteúdo e regras
 
 ### Sprint 5 — Monetização
 - [ ] Gateway (DA1) + webhook Supabase Edge → `profiles.plan`
