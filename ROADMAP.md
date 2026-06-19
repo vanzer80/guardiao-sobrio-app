@@ -121,12 +121,12 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 - [x] Tela Método com pilares ESPELHO/TÁTICA/ESCUDO
 - **DoD:** ✅ protocolo 100% offline · ✅ limite respeitado sem cortar crise · ✅ CVV/CAPS visíveis · ✅ disclaimer em todo o fluxo
 
-### Sprint 3 (sem. 7–8) — Polimento + Publicação
-- [ ] Perfil + Configurações
-- [ ] PIN + biometria
-- [ ] **Exclusão de conta (LGPD, 2 toques)**
-- [ ] Links CVV (188) e CAPS nas telas de protocolo e config
-- [ ] Aviso ético em todos os protocolos
+### Sprint 3 (sem. 7–8) — Polimento + Publicação ⏳ EM ANDAMENTO (19/06/2026)
+- [x] Perfil + Configurações (nome editável, email, plano, foco, data)
+- [x] PIN + biometria (`expo-local-authentication` + lock screen ao voltar do fundo)
+- [x] **Exclusão de conta (LGPD, 2 toques)** — Edge Function `delete-account` via admin API
+- [x] Links CVV (188) e CAPS tappable em Perfil e Protocolo
+- [x] Aviso ético em todos os protocolos
 - [ ] Testes em iOS e Android físicos
 - [ ] **Submissão App Store + Google Play**
 - [ ] Documentação de release (changelog, notas)
