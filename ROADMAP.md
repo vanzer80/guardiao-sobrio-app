@@ -111,14 +111,15 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 - [x] Notificação de lembrete diário (respeitando hard rule 23h–7h)
 - **DoD:** ✅ checklist salvo no Supabase com RLS · ✅ contador correto · ✅ 1 checklist/dia (UNIQUE constraint)
 
-### Sprint 2 (sem. 5–6) — Protocolo de Emergência + Navegação
-- [ ] Botão SOS flutuante (todas as telas, exceto onboarding/config)
-- [ ] Fluxo PARE → RESPIRE (4-4-6) → CONTATO → MOVIMENTO → ESTRUTURA 72h
-- [ ] Limite free (3/mês) **sem bloqueio em sessão ativa**
-- [ ] Tab navigation (Hoje · Método · Protocolo · Perfil)
-- [ ] Tela de Marco de dias
-- [ ] Dark mode como padrão
-- **DoD:** protocolo funciona **offline**; limite respeitado sem cortar crise.
+### Sprint 2 (sem. 5–6) — Protocolo de Emergência + Navegação ✅ CONCLUÍDO (19/06/2026)
+- [x] Botão SOS flutuante (tab central laranja com glow, acessível em 2 toques)
+- [x] Fluxo PARE → RESPIRE (4-4-6) → CONTATO → MOVIMENTO → ESTRUTURA 72h
+- [x] Limite free (3/mês) **sem bloqueio em sessão ativa** — avisa, nunca corta
+- [x] Tab navigation (Hoje · Método · SOS · Perfil) com SOS raised button
+- [x] Tela de Marco de dias (card dourado em 1, 3, 7, 14, 21, 30, 60, 90, 180, 365 dias)
+- [x] Dark mode como padrão (design noir #0e0d0c em todas as telas)
+- [x] Tela Método com pilares ESPELHO/TÁTICA/ESCUDO
+- **DoD:** ✅ protocolo 100% offline · ✅ limite respeitado sem cortar crise · ✅ CVV/CAPS visíveis · ✅ disclaimer em todo o fluxo
 
 ### Sprint 3 (sem. 7–8) — Polimento + Publicação
 - [ ] Perfil + Configurações
