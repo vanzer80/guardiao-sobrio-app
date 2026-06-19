@@ -250,11 +250,16 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 - **Planos:** Essencial R$ 19,90/mês · Guardião R$ 39,90/mês · Anual R$ 299
 - **Paywall:** suave (avisa, nunca bloqueia SOS)
 
-### Sprint 6 — Mapa de Gatilhos + Módulo Familiar
-- [ ] CRUD de gatilhos (horário/situação/emoção → resposta planejada)
-- [ ] Alerta de horário de risco
-- [ ] Módulo Familiar: convite (código 6 dígitos, expira 48h) + view segura (só "dia guardado: sim/não")
-- [ ] Revogar acesso (imediato, sem confirmação do familiar)
+### Sprint 6 — Mapa de Gatilhos + Módulo Familiar ✅ CONCLUÍDO (19/06/2026)
+- [x] CRUD de gatilhos (título, descrição, risco 1–5, estratégias de enfrentamento, soft-delete)
+- [x] Categorias de gatilho (sistema + custom via `trigger_categories`)
+- [x] Módulo Familiar: convite código 6 dígitos, expira 48h (`invitation_expires_at`)
+- [x] Vista do familiar: apenas "dia guardado" (sim/não) — sem diário, detalhes ou contador
+- [x] Revogar acesso: imediato, sem confirmação do familiar
+- [x] Nova tab "Escudo" na navegação (Mapa de Gatilhos + Familiar)
+- [x] Paywall suave por feature (Essential para gatilhos, Guardião para familiar)
+- [x] Migration: `family_connections.invitation_expires_at`
+- **DoD:** ✅ typecheck verde · ✅ lint verde · ✅ hard rules auditadas
 
 ### Sprint 7 — Estatísticas
 - [ ] Relatório semanal · gráficos de progresso (sem gamificação punitiva)
