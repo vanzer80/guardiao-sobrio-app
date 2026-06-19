@@ -6,38 +6,92 @@ import {
   Pressable,
   Alert,
   ActivityIndicator,
+  Linking,
+  Switch,
+  TextInput,
 } from 'react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import * as LocalAuthentication from 'expo-local-authentication';
+import { isBiometricLockEnabled, setBiometricLockEnabled } from '@/lib/appLock';
 import { supabase } from '@/lib/supabase';
+import { useProfileStore } from '@/hooks/useProfileStore';
 import { daysSince } from '@/lib/sobriety';
 import { Colors } from '@/constants/Colors';
 import { Button } from '@/components/ui/Button';
 import type { Tables } from '@/lib/database.types';
+import { cancelAllReminders, scheduleDailyReminder } from '@/lib/notifications';
 
 type Profile = Tables<'profiles'>;
 
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
+
 export default function PerfilScreen() {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { profile: storeProfile, setProfile: setStoreProfile } = useProfileStore();
+  const [profile, setProfile] = useState<Profile | null>(storeProfile);
+  const [loading, setLoading] = useState(!storeProfile);
   const [signOutLoading, setSignOutLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(() => isBiometricLockEnabled());
+  const [notifEnabled, setNotifEnabled] = useState(true);
+  const [editingName, setEditingName] = useState(false);
+  const [nameValue, setNameValue] = useState('');
+  const [savingName, setSavingName] = useState(false);
+  const nameInputRef = useRef<TextInput>(null);
+  const [userEmail, setUserEmail] = useState('');
 
   useEffect(() => {
     (async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
+      setUserEmail(session.user.email ?? '');
 
-      setProfile(data);
-      setLoading(false);
+      if (!storeProfile) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        setProfile(data);
+        setLoading(false);
+      }
+
+      const hasBiometric = await LocalAuthentication.hasHardwareAsync();
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+      setBiometricAvailable(hasBiometric && isEnrolled);
     })();
-  }, []);
+  }, [storeProfile]);
+
+  const startEditingName = () => {
+    setNameValue(profile?.full_name ?? '');
+    setEditingName(true);
+  };
+
+  const saveName = async () => {
+    const trimmed = nameValue.trim();
+    if (!trimmed || trimmed === profile?.full_name) {
+      setEditingName(false);
+      return;
+    }
+    setSavingName(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { setSavingName(false); return; }
+
+    const { data: updated } = await supabase
+      .from('profiles')
+      .update({ full_name: trimmed })
+      .eq('id', session.user.id)
+      .select()
+      .single();
+
+    if (updated) {
+      setProfile(updated);
+      setStoreProfile(updated);
+    }
+    setSavingName(false);
+    setEditingName(false);
+  };
 
   const handleSignOut = () => {
     Alert.alert('Sair da conta', 'Tem certeza que deseja sair?', [
@@ -47,12 +101,7 @@ export default function PerfilScreen() {
         style: 'destructive',
         onPress: async () => {
           setSignOutLoading(true);
-          const { error } = await supabase.auth.signOut();
-          if (error) {
-            setSignOutLoading(false);
-            Alert.alert('Erro ao sair', error.message);
-          }
-          // Em sucesso, _layout.tsx redireciona para login automaticamente.
+          await supabase.auth.signOut();
         },
       },
     ]);
@@ -60,23 +109,64 @@ export default function PerfilScreen() {
 
   const handleDeleteAccount = () => {
     Alert.alert(
-      'Excluir conta',
+      'Excluir conta e dados',
       'Todos os seus dados serão apagados permanentemente. Esta ação não pode ser desfeita.',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
-          text: 'Excluir minha conta',
+          text: 'Excluir tudo',
           style: 'destructive',
-          onPress: async () => {
-            // TODO: Chamar Edge Function que deleta a conta via service_role (LGPD)
-            Alert.alert(
-              'Exclusão solicitada',
-              'Seus dados serão removidos em até 24h. Se precisar, entre em contato via email.',
-            );
-          },
+          onPress: confirmDelete,
         },
       ],
     );
+  };
+
+  const confirmDelete = async () => {
+    setDeleteLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Sessão expirada');
+
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/delete-account`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Erro ao excluir conta');
+      }
+
+      await supabase.auth.signOut();
+    } catch (err) {
+      setDeleteLoading(false);
+      Alert.alert('Erro', err instanceof Error ? err.message : 'Tente novamente.');
+    }
+  };
+
+  const toggleNotifications = async (value: boolean) => {
+    setNotifEnabled(value);
+    if (value) {
+      await scheduleDailyReminder(9, 0);
+    } else {
+      await cancelAllReminders();
+    }
+  };
+
+  const toggleBiometric = async (value: boolean) => {
+    if (value) {
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: 'Ative a proteção por biometria',
+        cancelLabel: 'Cancelar',
+      });
+      if (!result.success) return;
+    }
+    setBiometricEnabled(value);
+    setBiometricLockEnabled(value);
   };
 
   if (loading) {
@@ -94,8 +184,9 @@ export default function PerfilScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }}>
       <ScrollView contentContainerStyle={{ padding: 24 }}>
-        {/* Header */}
-        <View style={{ marginBottom: 32 }}>
+
+        {/* Header — avatar + nome editável */}
+        <View style={{ marginBottom: 32, alignItems: 'flex-start' }}>
           <View
             style={{
               width: 64,
@@ -113,9 +204,39 @@ export default function PerfilScreen() {
               {profile?.full_name?.[0]?.toUpperCase() ?? '?'}
             </Text>
           </View>
-          <Text style={{ color: Colors.text, fontSize: 22, fontWeight: '600' }}>
-            {profile?.full_name ?? 'Usuário'}
-          </Text>
+
+          {editingName ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <TextInput
+                ref={nameInputRef}
+                value={nameValue}
+                onChangeText={setNameValue}
+                onBlur={saveName}
+                onSubmitEditing={saveName}
+                autoFocus
+                style={{
+                  color: Colors.text,
+                  fontSize: 22,
+                  fontWeight: '600',
+                  borderBottomWidth: 1,
+                  borderBottomColor: Colors.gold,
+                  minWidth: 160,
+                  paddingBottom: 2,
+                }}
+              />
+              {savingName && <ActivityIndicator size="small" color={Colors.gold} />}
+            </View>
+          ) : (
+            <Pressable onPress={startEditingName} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={{ color: Colors.text, fontSize: 22, fontWeight: '600' }}>
+                {profile?.full_name || 'Usuário'}
+              </Text>
+              <Text style={{ color: Colors.muted, fontSize: 12 }}>✎</Text>
+            </Pressable>
+          )}
+
+          <Text style={{ color: Colors.muted, fontSize: 13, marginTop: 2 }}>{userEmail}</Text>
+
           {days !== null && (
             <Text style={{ color: Colors.muted, fontSize: 14, marginTop: 4 }}>
               {days} {days === 1 ? 'dia' : 'dias'} guardados
@@ -123,7 +244,20 @@ export default function PerfilScreen() {
           )}
         </View>
 
-        {/* Info */}
+        {/* Info da conta */}
+        <InfoCard rows={[
+          { label: 'Plano', value: profile?.is_premium ? 'Premium' : 'Gratuito' },
+          { label: 'Foco', value: profile?.substance_focus ?? '—' },
+          {
+            label: 'Sobriedade desde',
+            value: profile?.sobriety_start_date
+              ? new Date(profile.sobriety_start_date + 'T12:00:00').toLocaleDateString('pt-BR')
+              : '—',
+          },
+        ]} />
+
+        {/* Configurações */}
+        <SectionTitle>Configurações</SectionTitle>
         <View
           style={{
             backgroundColor: Colors.surface,
@@ -133,41 +267,25 @@ export default function PerfilScreen() {
             marginBottom: 24,
           }}
         >
-          {[
-            {
-              label: 'Plano',
-              value: profile?.is_premium ? 'Premium' : 'Gratuito',
-            },
-            {
-              label: 'Foco',
-              value: profile?.substance_focus ?? '—',
-            },
-            {
-              label: 'Início da sobriedade',
-              value: profile?.sobriety_start_date
-                ? new Date(profile.sobriety_start_date + 'T12:00:00').toLocaleDateString('pt-BR')
-                : '—',
-            },
-          ].map((row, i, arr) => (
-            <View
-              key={row.label}
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: 16,
-                borderBottomWidth: i < arr.length - 1 ? 1 : 0,
-                borderBottomColor: Colors.border,
-              }}
-            >
-              <Text style={{ color: Colors.muted, fontSize: 14 }}>{row.label}</Text>
-              <Text style={{ color: Colors.text, fontSize: 14 }}>{row.value}</Text>
-            </View>
-          ))}
+          <ToggleRow
+            label="Lembrete diário"
+            sublabel="09:00 — desative para silenciar"
+            value={notifEnabled}
+            onChange={toggleNotifications}
+          />
+          {biometricAvailable && (
+            <ToggleRow
+              label="Biometria / PIN"
+              sublabel="Protege o app ao retornar do fundo"
+              value={biometricEnabled}
+              onChange={toggleBiometric}
+              borderTop
+            />
+          )}
         </View>
 
         {/* Ações */}
-        <View style={{ gap: 12 }}>
+        <View style={{ gap: 12, marginBottom: 8 }}>
           <Button
             title="Sair da conta"
             onPress={handleSignOut}
@@ -176,12 +294,19 @@ export default function PerfilScreen() {
           />
         </View>
 
-        {/* LGPD — exclusão de conta (2 toques — hard rule) */}
-        <Pressable onPress={handleDeleteAccount} style={{ marginTop: 32, alignItems: 'center' }}>
-          <Text style={{ color: Colors.danger, fontSize: 13 }}>Excluir minha conta e dados</Text>
+        {/* LGPD — exclusão em 2 toques */}
+        <Pressable
+          onPress={handleDeleteAccount}
+          disabled={deleteLoading}
+          style={{ marginTop: 24, alignItems: 'center' }}
+        >
+          {deleteLoading
+            ? <ActivityIndicator color={Colors.danger} />
+            : <Text style={{ color: Colors.danger, fontSize: 13 }}>Excluir minha conta e todos os dados</Text>
+          }
         </Pressable>
 
-        {/* Recursos de crise — sempre visíveis (hard rule) */}
+        {/* CVV / CAPS — hard rule: sempre visível */}
         <View
           style={{
             marginTop: 40,
@@ -190,19 +315,102 @@ export default function PerfilScreen() {
             backgroundColor: Colors.surfaceRaised,
             borderWidth: 1,
             borderColor: Colors.border,
-            gap: 6,
+            gap: 8,
           }}
         >
           <Text style={{ color: Colors.gold, fontSize: 13, fontWeight: '600' }}>
             Precisa de ajuda agora?
           </Text>
-          <Text style={{ color: Colors.muted, fontSize: 13 }}>CVV — 188 (24h, sigiloso)</Text>
-          <Text style={{ color: Colors.muted, fontSize: 13 }}>CAPS — caps.ms/onde-buscar-ajuda</Text>
+
+          <Pressable onPress={() => Linking.openURL('tel:188')} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={{ color: Colors.emergency, fontSize: 13, fontWeight: '600' }}>CVV 188</Text>
+            <Text style={{ color: Colors.muted, fontSize: 13 }}>— gratuito, 24h, sigiloso</Text>
+          </Pressable>
+
+          <Pressable onPress={() => Linking.openURL('https://caps.ms/onde-buscar-ajuda')} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={{ color: Colors.gold, fontSize: 13, fontWeight: '600' }}>CAPS</Text>
+            <Text style={{ color: Colors.muted, fontSize: 13 }}>— rede pública de saúde mental</Text>
+          </Pressable>
+
           <Text style={{ color: Colors.muted, fontSize: 11, marginTop: 4 }}>
             Este app não substitui psiquiatra, psicólogo ou grupos de apoio.
           </Text>
         </View>
+
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function SectionTitle({ children }: { children: string }) {
+  return (
+    <Text style={{ color: Colors.muted, fontSize: 12, fontWeight: '600', letterSpacing: 1, marginBottom: 8, marginTop: 8 }}>
+      {children.toUpperCase()}
+    </Text>
+  );
+}
+
+function InfoCard({ rows }: { rows: { label: string; value: string }[] }) {
+  return (
+    <View
+      style={{
+        backgroundColor: Colors.surface,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: Colors.border,
+        marginBottom: 24,
+      }}
+    >
+      {rows.map((row, i) => (
+        <View
+          key={row.label}
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: 16,
+            borderBottomWidth: i < rows.length - 1 ? 1 : 0,
+            borderBottomColor: Colors.border,
+          }}
+        >
+          <Text style={{ color: Colors.muted, fontSize: 14 }}>{row.label}</Text>
+          <Text style={{ color: Colors.text, fontSize: 14 }}>{row.value}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function ToggleRow({
+  label, sublabel, value, onChange, borderTop,
+}: {
+  label: string;
+  sublabel?: string;
+  value: boolean;
+  onChange: (v: boolean) => void;
+  borderTop?: boolean;
+}) {
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: 16,
+        borderTopWidth: borderTop ? 1 : 0,
+        borderTopColor: Colors.border,
+      }}
+    >
+      <View style={{ flex: 1, marginRight: 16 }}>
+        <Text style={{ color: Colors.text, fontSize: 15 }}>{label}</Text>
+        {sublabel && <Text style={{ color: Colors.muted, fontSize: 12, marginTop: 2 }}>{sublabel}</Text>}
+      </View>
+      <Switch
+        value={value}
+        onValueChange={onChange}
+        trackColor={{ false: Colors.border, true: Colors.gold }}
+        thumbColor="#fff"
+      />
+    </View>
   );
 }

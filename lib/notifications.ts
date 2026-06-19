@@ -41,6 +41,10 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
   return token.data;
 }
 
+export async function cancelAllReminders(): Promise<void> {
+  await Notifications.cancelAllScheduledNotificationsAsync();
+}
+
 // Respeita a hard rule: sem notificações entre 23h–7h
 export async function scheduleDailyReminder(hour = 9, minute = 0): Promise<void> {
   await Notifications.cancelAllScheduledNotificationsAsync();
