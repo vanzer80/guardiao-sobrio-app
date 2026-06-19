@@ -11,6 +11,7 @@ import {
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { daysSince, todayISO } from '@/lib/sobriety';
+import { getMilestoneLabel } from '@/lib/protocolo';
 import { Colors } from '@/constants/Colors';
 import type { Tables } from '@/lib/database.types';
 
@@ -143,6 +144,7 @@ export default function HojeScreen() {
   }
 
   const days = daysSince(profile?.sobriety_start_date ?? null);
+  const milestoneLabel = getMilestoneLabel(days);
   const allDone = items.length > 0 && completions.length >= items.length;
 
   return (
@@ -164,6 +166,38 @@ export default function HojeScreen() {
         <Text style={{ color: Colors.text, fontSize: 20, fontWeight: '600', marginBottom: 32 }}>
           {profile?.full_name ? `Olá, ${profile.full_name.split(' ')[0]}` : 'Olá'}
         </Text>
+
+        {/* Marco de dias */}
+        {milestoneLabel && (
+          <View
+            style={{
+              backgroundColor: `${Colors.gold}15`,
+              borderRadius: 16,
+              padding: 20,
+              marginBottom: 24,
+              borderWidth: 1,
+              borderColor: Colors.gold,
+              alignItems: 'center',
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: 'CormorantGaramond',
+                color: Colors.gold,
+                fontSize: 32,
+                marginBottom: 4,
+              }}
+            >
+              {milestoneLabel}
+            </Text>
+            <Text style={{ color: Colors.text, fontSize: 15, fontWeight: '600' }}>
+              Marco alcançado
+            </Text>
+            <Text style={{ color: Colors.muted, fontSize: 13, marginTop: 4, textAlign: 'center' }}>
+              Cada dia guardado é uma escolha. Parabéns.
+            </Text>
+          </View>
+        )}
 
         {/* Contador de sobriedade */}
         <View
