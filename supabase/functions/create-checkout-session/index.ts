@@ -103,7 +103,7 @@ Deno.serve(async (req: Request) => {
 
     // 5. Criar Checkout Session
     // success_url e cancel_url usam deep links do app (Expo)
-    const appScheme = Deno.env.get('APP_SCHEME') ?? 'guardiao';
+    const appScheme = Deno.env.get('APP_SCHEME') ?? 'guardiaosobrio';
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
       payment_method_types: ['card'],

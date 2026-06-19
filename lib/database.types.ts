@@ -205,7 +205,9 @@ export type Database = {
           id: string
           is_premium: boolean
           onboarding_completed: boolean
+          plan: string
           sobriety_start_date: string | null
+          stripe_customer_id: string | null
           substance_focus: string | null
           timezone: string
           updated_at: string
@@ -217,7 +219,9 @@ export type Database = {
           id: string
           is_premium?: boolean
           onboarding_completed?: boolean
+          plan?: string
           sobriety_start_date?: string | null
+          stripe_customer_id?: string | null
           substance_focus?: string | null
           timezone?: string
           updated_at?: string
@@ -229,7 +233,9 @@ export type Database = {
           id?: string
           is_premium?: boolean
           onboarding_completed?: boolean
+          plan?: string
           sobriety_start_date?: string | null
+          stripe_customer_id?: string | null
           substance_focus?: string | null
           timezone?: string
           updated_at?: string
@@ -326,6 +332,39 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          new_plan: string | null
+          old_plan: string | null
+          stripe_event_id: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          new_plan?: string | null
+          old_plan?: string | null
+          stripe_event_id?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          new_plan?: string | null
+          old_plan?: string | null
+          stripe_event_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -336,6 +375,7 @@ export type Database = {
           provider: string | null
           provider_subscription_id: string | null
           status: string
+          stripe_subscription_id: string | null
           trial_end: string | null
           updated_at: string
           user_id: string
@@ -349,6 +389,7 @@ export type Database = {
           provider?: string | null
           provider_subscription_id?: string | null
           status?: string
+          stripe_subscription_id?: string | null
           trial_end?: string | null
           updated_at?: string
           user_id: string
@@ -362,6 +403,7 @@ export type Database = {
           provider?: string | null
           provider_subscription_id?: string | null
           status?: string
+          stripe_subscription_id?: string | null
           trial_end?: string | null
           updated_at?: string
           user_id?: string

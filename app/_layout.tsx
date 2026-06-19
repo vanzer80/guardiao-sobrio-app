@@ -7,7 +7,9 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/hooks/useAuthStore';
 import { useProfileStore } from '@/hooks/useProfileStore';
+import { usePlanStore } from '@/hooks/usePlanStore';
 import { isBiometricLockEnabled } from '@/lib/appLock';
+import { PlanType } from '@/lib/types.monetization';
 import { Colors } from '@/constants/Colors';
 import '../global.css';
 
@@ -56,6 +58,7 @@ export default function RootLayout() {
     setProfile,
     setLoading: setProfileLoading,
   } = useProfileStore();
+  const setPlan = usePlanStore((s) => s.setPlan);
   const router = useRouter();
   const segments = useSegments();
 
@@ -91,9 +94,10 @@ export default function RootLayout() {
       .maybeSingle()
       .then(({ data }) => {
         setProfile(data);
+        if (data?.plan) setPlan(data.plan as PlanType);
         setProfileLoading(false);
       });
-  }, [userId, setProfile, setProfileLoading]);
+  }, [userId, setProfile, setProfileLoading, setPlan]);
 
   useEffect(() => {
     if (isLoading) return;
