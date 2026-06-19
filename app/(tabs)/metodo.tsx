@@ -1,8 +1,10 @@
 import { View, Text, SafeAreaView, ScrollView, Pressable } from 'react-native';
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { daysSince } from '@/lib/sobriety';
 import { useProfileStore } from '@/hooks/useProfileStore';
+import { usePlanStore } from '@/hooks/usePlanStore';
 import {
   FUNDAMENTOS,
   getPilarHoje,
@@ -44,12 +46,14 @@ const PILAR_COLOR: Record<string, string> = {
 };
 
 export default function MetodoScreen() {
+  const router = useRouter();
   const { profile } = useProfileStore();
+  const plan = usePlanStore((s) => s.plan);
   const days = daysSince(profile?.sobriety_start_date ?? null) ?? 0;
   const pilarHoje = getPilarHoje();
   const pilarMeta = PILAR_META[pilarHoje];
   const fundamentoHoje = getFundamentoDodia(days);
-  const isPremium = profile?.is_premium ?? false;
+  const isPremium = plan !== 'free';
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [aplicados, setAplicados] = useState<Set<number>>(new Set());
 
@@ -193,6 +197,34 @@ export default function MetodoScreen() {
             </Text>
           </View>
         )}
+
+        {/* Programa 30 Dias — Guardian only */}
+        <Pressable
+          onPress={() => router.push('/programa30')}
+          style={{
+            marginTop: 32,
+            backgroundColor: plan === 'guardian' ? `${Colors.gold}11` : Colors.surface,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: plan === 'guardian' ? Colors.gold : Colors.border,
+            padding: 18,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <View>
+            <Text style={{ color: plan === 'guardian' ? Colors.gold : Colors.muted, fontWeight: '700', fontSize: 15 }}>
+              Programa 30 Dias
+            </Text>
+            <Text style={{ color: Colors.muted, fontSize: 12, marginTop: 4 }}>
+              {plan === 'guardian'
+                ? '1 fundamento + prática + reflexão por dia'
+                : 'Exclusivo do plano Guardião'}
+            </Text>
+          </View>
+          <Text style={{ color: plan === 'guardian' ? Colors.gold : Colors.muted, fontSize: 18 }}>→</Text>
+        </Pressable>
 
         <Text style={{ color: Colors.muted, fontSize: 12, textAlign: 'center', marginTop: 40, fontStyle: 'italic' }}>
           Este app não substitui psiquiatra, psicólogo ou grupos de apoio.

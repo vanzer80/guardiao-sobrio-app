@@ -21,14 +21,22 @@ import { Colors } from '@/constants/Colors';
 import { Button } from '@/components/ui/Button';
 import type { Tables } from '@/lib/database.types';
 import { cancelAllReminders, scheduleDailyReminder } from '@/lib/notifications';
+import { usePlanStore } from '@/hooks/usePlanStore';
 
 type Profile = Tables<'profiles'>;
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
+const PLAN_LABEL: Record<string, string> = {
+  free: 'Gratuito',
+  essential: 'Essential',
+  guardian: 'Guardião',
+};
+
 export default function PerfilScreen() {
   const router = useRouter();
   const { profile: storeProfile, setProfile: setStoreProfile } = useProfileStore();
+  const plan = usePlanStore((s) => s.plan);
   const [profile, setProfile] = useState<Profile | null>(storeProfile);
   const [loading, setLoading] = useState(!storeProfile);
   const [signOutLoading, setSignOutLoading] = useState(false);
@@ -248,7 +256,7 @@ export default function PerfilScreen() {
 
         {/* Info da conta */}
         <InfoCard rows={[
-          { label: 'Plano', value: profile?.is_premium ? 'Premium' : 'Gratuito' },
+          { label: 'Plano', value: PLAN_LABEL[plan] ?? 'Gratuito' },
           { label: 'Foco', value: profile?.substance_focus ?? '—' },
           {
             label: 'Sobriedade desde',
@@ -271,7 +279,7 @@ export default function PerfilScreen() {
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: 24,
+            marginBottom: 12,
           }}
         >
           <View>
@@ -279,6 +287,32 @@ export default function PerfilScreen() {
             <Text style={{ color: Colors.muted, fontSize: 12, marginTop: 2 }}>Checklist, diário e relatório PDF</Text>
           </View>
           <Text style={{ color: Colors.gold, fontSize: 18 }}>→</Text>
+        </Pressable>
+
+        {/* Programa 30 Dias — Guardian only */}
+        <Pressable
+          onPress={() => router.push('/programa30')}
+          style={{
+            backgroundColor: plan === 'guardian' ? `${Colors.gold}11` : Colors.surface,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: plan === 'guardian' ? Colors.gold : Colors.border,
+            padding: 16,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 24,
+          }}
+        >
+          <View>
+            <Text style={{ color: plan === 'guardian' ? Colors.gold : Colors.muted, fontWeight: '600', fontSize: 15 }}>
+              Programa 30 Dias
+            </Text>
+            <Text style={{ color: Colors.muted, fontSize: 12, marginTop: 2 }}>
+              {plan === 'guardian' ? 'Conteúdo progressivo com certificado' : 'Plano Guardião'}
+            </Text>
+          </View>
+          <Text style={{ color: plan === 'guardian' ? Colors.gold : Colors.muted, fontSize: 18 }}>→</Text>
         </Pressable>
 
         {/* Configurações */}
