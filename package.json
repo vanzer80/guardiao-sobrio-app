@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
+    "@stripe/stripe-react-native": "^0.67.0",
     "@supabase/supabase-js": "^2.46.0",
     "expo": "~56.0.12",
     "expo-constants": "~56.0.18",
