@@ -56,7 +56,10 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen name="escudo" options={{ title: 'Escudo' }} />
       <Tabs.Screen name="perfil" options={{ title: 'Perfil' }} />
+      {/* Hidden from tab bar */}
+      <Tabs.Screen name="plans" options={{ href: null }} />
     </Tabs>
   );
 }

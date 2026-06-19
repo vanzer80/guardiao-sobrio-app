@@ -157,6 +157,7 @@ export type Database = {
           family_name: string
           family_user_id: string | null
           id: string
+          invitation_expires_at: string | null
           invitation_status: string
           invitation_token: string | null
           relationship: string | null
@@ -173,6 +174,7 @@ export type Database = {
           family_name: string
           family_user_id?: string | null
           id?: string
+          invitation_expires_at?: string | null
           invitation_status?: string
           invitation_token?: string | null
           relationship?: string | null
@@ -189,6 +191,7 @@ export type Database = {
           family_name?: string
           family_user_id?: string | null
           id?: string
+          invitation_expires_at?: string | null
           invitation_status?: string
           invitation_token?: string | null
           relationship?: string | null
