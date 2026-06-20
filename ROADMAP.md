@@ -249,6 +249,9 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 - [ ] **Registrar webhook** no Stripe Dashboard → `https://huumwjwndsefdmgezohb.supabase.co/functions/v1/handle-stripe-webhooks`
 - [ ] **Criar produtos Stripe** (Essential Monthly/Annual, Guardian Monthly/Annual)
 - [ ] **Teste E2E** com cartão Stripe test mode (`4242 4242 4242 4242`)
+- [x] **Teste gratuito 5 dias** — migration `20260620120000_add_trial_to_profiles.sql`; RPC `activate_trial()` (one-shot guard via `trial_activated_at IS NULL`, `RETURNS TIMESTAMPTZ`); `usePlanStore.activateTrial()` atualiza store em-sessão sem page reload; banner + botão trial em `PlansComparison.tsx` e `plans.tsx`
+- [x] Hotfix `20260620130000_fix_activate_trial_column_reference.sql` — BUG-001: `AND plan = 'free'` removido (coluna inexistente em profiles); `RETURNS TIMESTAMPTZ` restaurado; `RAISE EXCEPTION 'trial_already_used'` para guard one-shot; `GRANT EXECUTE` re-aplicado
+- **DoD trial:** ✅ trial testado em produção (QA 20/06/2026) — 10/10 itens aprovados · ativação, alert, banner, unlock de 4 módulos (gatilhos, familiar, programa30, stats) e one-shot todos funcionando imediatamente em-sessão
 - **Planos:** Essencial R$ 19,90/mês · Guardião R$ 39,90/mês · Anual R$ 299
 - **Paywall:** suave (avisa, nunca bloqueia SOS)
 
@@ -353,6 +356,9 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 | DT3 | Usuário que usa OAuth (Google/Apple) entra no fluxo de `setup.tsx` sem passar pelas telas de onboarding — `onboarding_motivo/tempo/desafio` ficam nulos | `app/(auth)/register.tsx` handleOAuth | Personalização ausente para usuários OAuth; aceitável no MVP mas idealmente o OAuth também deve capturar o contexto | Sprint 10 |
 | DT4 | Supabase MCP plugin (`mcp.supabase.com`) usa OAuth browser — ainda não autenticado; migrations e queries diretas precisam ser feitas via Dashboard ou CLI | Dev tooling | Impacta produtividade: sem aplicação automática de migrations via IA | Configurar OAuth no Claude Code Settings |
 | DT5 | TypeScript types em `lib/database.types.ts` são gerados manualmente — qualquer nova migration exige atualização manual dos types | `lib/database.types.ts` | Risco de divergência entre schema real e types usados no app | Automatizar via `supabase gen types` no CI (Sprint 10) |
+| DT6 | BUG-002 — `metodo.tsx` bloqueia fundamentos com checagem direta de plano em vez de `canAccessFeature()`; durante trial (plano efetivo = guardian) 10/13 fundamentos aparecem travados | `app/(tabs)/metodo.tsx` | Médio — usuário com trial ativo não acessa fundamentos 4–13 | Sprint 10 |
+| DT7 | BUG-003 — Frontend exibe Alert genérico em falha do RPC `activate_trial()`; exceção `trial_already_used` existe no banco mas não é tratada especificamente no cliente | `app/(tabs)/plans.tsx` | Baixo — UX confusa em tentativa de reativação | Sprint 10 |
+| DT8 | BUG-004 — Rota `/planos` retorna 404; tela de Planos (`/plans`) não tem link na navegação principal — acessível apenas via paywalls | `app/(tabs)/` + navegação | Baixo — confirmar se ausência de link direto é design intencional | Sprint 10 |
 
 ---
 
