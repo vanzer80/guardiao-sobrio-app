@@ -161,8 +161,8 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 - [x] Onboarding 3 passos: nome → data de sobriedade → foco da substância
 - [x] Login: email/senha funcional (`supabase.auth.signInWithPassword`)
 - [x] Cadastro: email/senha + validação Zod (`supabase.auth.signUp`)
-- [ ] Google OAuth — botão pendente (requer config OAuth no Supabase Dashboard)
-- [ ] Sign in with Apple — pendente (requer `expo-apple-authentication` + Apple Dev Account) ⚠️ obrigatório antes da submissão
+- [x] Google OAuth — botão implementado em `register.tsx` (Sprint 9, PKCE via WebBrowser); ⚠️ **config no Dashboard pendente** (ver Sprint 9)
+- [x] Sign in with Apple — botão implementado em `register.tsx` via Supabase OAuth (iOS-only via `Platform.OS === 'ios'`); ⚠️ **config Apple Dev Account pendente** (ver Sprint 9)
 - [x] Perfil salvo em `profiles` (trigger `handle_new_user` + update no onboarding)
 - [x] Home + contador de dias (calculado de `sobriety_start_date`)
 - [x] Checklist diário (5 itens padrão criados no onboarding, save no DB, toggle optimista)
@@ -187,6 +187,7 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 - [x] **Exclusão de conta (LGPD, 2 toques)** — Edge Function `delete-account` via admin API
 - [x] Links CVV (188) e CAPS tappable em Perfil e Protocolo
 - [x] Aviso ético em todos os protocolos
+- [ ] **Teste E2E OAuth** (Google + Apple) — fluxo PKCE implementado mas não testado; requer providers configurados no Dashboard ⚠️ obrigatório antes da submissão
 - [ ] Testes em iOS e Android físicos ⚠️ **CRÍTICO** — requer dispositivo + Apple/Google account
 - [ ] **Submissão App Store + Google Play** ⚠️ **CAMINHO CRÍTICO** — obrigatório antes da monetização entrar em produção
 - [ ] Documentação de release (changelog, notas) ⚠️ **PENDENTE**
@@ -340,6 +341,18 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 - [ ] Notificações de comunidade (opt-in)
 - [ ] Analytics anonimizados — DA3 aberta
 - [ ] A/B test: onboarding e paywall
+
+---
+
+## Dívidas Técnicas Abertas
+
+| # | Dívida | Arquivo(s) | Impacto | Resolver em |
+|---|---|---|---|---|
+| DT1 | `jest-expo/winter` sobrescreve `fetch` global — testes de integração com `@supabase/supabase-js` retornam `{ message: undefined }` em vez de resposta real | `__tests__/*.test.ts` | Qualquer teste futuro que use `supabase.from(...)` vai falhar silenciosamente; usar `node:https` como workaround | Antes de novos testes de integração |
+| DT2 | `saveOnboardingContext` em `register.tsx` é non-blocking (`try/catch` vazio) — se falhar, contexto pré-onboarding (motivo/tempo/desafio) é perdido sem log | `app/(auth)/register.tsx:47` | Edge case: usuário cadastrado sem contexto de onboarding; não bloqueia fluxo mas perde dado de personalização | Sprint 10 |
+| DT3 | Usuário que usa OAuth (Google/Apple) entra no fluxo de `setup.tsx` sem passar pelas telas de onboarding — `onboarding_motivo/tempo/desafio` ficam nulos | `app/(auth)/register.tsx` handleOAuth | Personalização ausente para usuários OAuth; aceitável no MVP mas idealmente o OAuth também deve capturar o contexto | Sprint 10 |
+| DT4 | Supabase MCP plugin (`mcp.supabase.com`) usa OAuth browser — ainda não autenticado; migrations e queries diretas precisam ser feitas via Dashboard ou CLI | Dev tooling | Impacta produtividade: sem aplicação automática de migrations via IA | Configurar OAuth no Claude Code Settings |
+| DT5 | TypeScript types em `lib/database.types.ts` são gerados manualmente — qualquer nova migration exige atualização manual dos types | `lib/database.types.ts` | Risco de divergência entre schema real e types usados no app | Automatizar via `supabase gen types` no CI (Sprint 10) |
 
 ---
 
