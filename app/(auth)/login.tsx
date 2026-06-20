@@ -20,7 +20,11 @@ export default function LoginScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { email: '', password: '' },
   });
@@ -42,10 +46,39 @@ export default function LoginScreen() {
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}
         keyboardShouldPersistTaps="handled"
       >
+        {/* Eyebrow */}
         <Text
-          style={{ fontFamily: 'CormorantGaramond', color: Colors.gold, fontSize: 40, marginBottom: 4 }}
+          style={{
+            color: Colors.gold,
+            fontSize: 11,
+            letterSpacing: 3.5,
+            marginBottom: 12,
+          }}
         >
-          O Guardião Sóbrio
+          BEM-VINDO DE VOLTA
+        </Text>
+
+        {/* Título serifado */}
+        <Text
+          style={{
+            fontFamily: 'CormorantGaramond',
+            color: Colors.text,
+            fontSize: 40,
+            lineHeight: 46,
+          }}
+        >
+          O Guardião
+        </Text>
+        <Text
+          style={{
+            fontFamily: 'CormorantGaramond-Italic',
+            color: Colors.gold,
+            fontSize: 40,
+            lineHeight: 46,
+            marginBottom: 8,
+          }}
+        >
+          Sóbrio
         </Text>
         <Text style={{ color: Colors.muted, fontSize: 15, marginBottom: 40 }}>
           Sobriedade não é abstinência. É construção.
@@ -89,7 +122,11 @@ export default function LoginScreen() {
         </View>
 
         <View style={{ marginTop: 32, alignItems: 'center', gap: 12 }}>
-          <Pressable onPress={() => router.push('/(auth)/register')}>
+          <Pressable
+            onPress={() => router.push('/(auth)/register')}
+            accessibilityRole="button"
+            style={{ paddingVertical: 8 }}
+          >
             <Text style={{ color: Colors.muted, fontSize: 15 }}>
               Não tem conta?{' '}
               <Text style={{ color: Colors.gold }}>Criar conta</Text>
@@ -98,10 +135,8 @@ export default function LoginScreen() {
         </View>
 
         <View style={{ marginTop: 48, alignItems: 'center', gap: 6 }}>
-          <Text style={{ color: Colors.muted, fontSize: 12 }}>
-            CVV — 188 · CAPS — caps.ms/onde-buscar-ajuda
-          </Text>
-          <Text style={{ color: Colors.muted, fontSize: 11, textAlign: 'center' }}>
+          <Text style={{ color: Colors.mutedDark, fontSize: 11, textAlign: 'center', lineHeight: 17 }}>
+            CVV — 188 · CAPS — caps.ms/onde-buscar-ajuda{'\n'}
             Este app não substitui psiquiatra, psicólogo ou grupos de apoio.
           </Text>
         </View>

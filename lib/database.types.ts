@@ -208,6 +208,9 @@ export type Database = {
           id: string
           is_premium: boolean
           onboarding_completed: boolean
+          onboarding_desafio: string | null
+          onboarding_motivo: string | null
+          onboarding_tempo: string | null
           plan: string
           sobriety_start_date: string | null
           stripe_customer_id: string | null
@@ -222,6 +225,9 @@ export type Database = {
           id: string
           is_premium?: boolean
           onboarding_completed?: boolean
+          onboarding_desafio?: string | null
+          onboarding_motivo?: string | null
+          onboarding_tempo?: string | null
           plan?: string
           sobriety_start_date?: string | null
           stripe_customer_id?: string | null
@@ -236,6 +242,9 @@ export type Database = {
           id?: string
           is_premium?: boolean
           onboarding_completed?: boolean
+          onboarding_desafio?: string | null
+          onboarding_motivo?: string | null
+          onboarding_tempo?: string | null
           plan?: string
           sobriety_start_date?: string | null
           stripe_customer_id?: string | null

@@ -123,22 +123,25 @@ export default function RootLayout() {
 
     const segs = segments as string[];
     const inAuthGroup = segs[0] === '(auth)';
-    const isOnboarding = segs[1] === 'onboarding';
+    // setup = tela de detalhes de perfil (nome, data, substância) pós-cadastro
+    const isSetup = segs[1] === 'setup';
+    // ativacao = tela de celebração exibida APÓS o setup; não redirecionar para tabs ainda
+    const isAtivacao = segs[1] === 'ativacao';
 
     if (!session) {
       SplashScreen.hideAsync();
-      if (!inAuthGroup) router.replace('/(auth)/login');
+      if (!inAuthGroup) router.replace('/(auth)/welcome');
       return;
     }
 
-    // Com sessão, espera o profile carregar para decidir onboarding x tabs.
+    // Com sessão, espera o profile carregar para decidir setup x tabs.
     if (profileLoading) return;
     SplashScreen.hideAsync();
 
     if (!profile?.onboarding_completed) {
-      // Onboarding incompleto — leva (ou mantém) o usuário no onboarding.
-      if (!isOnboarding) router.replace('/(auth)/onboarding');
-    } else if (inAuthGroup) {
+      // Setup incompleto — leva (ou mantém) o usuário na tela de setup.
+      if (!isSetup) router.replace('/(auth)/setup');
+    } else if (inAuthGroup && !isAtivacao) {
       router.replace('/(tabs)');
     }
   }, [session, isLoading, segments, profile, profileLoading, router]);
@@ -152,7 +155,6 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="stats" />
-        <Stack.Screen name="plans" />
         <Stack.Screen name="+not-found" />
       </Stack>
       {locked && (

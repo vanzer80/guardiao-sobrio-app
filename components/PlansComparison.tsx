@@ -5,14 +5,21 @@
  * Copy focuses on protection and structure, not outcomes.
  */
 
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, SafeAreaView, Pressable } from 'react-native';
 import { PLAN_FEATURES, PRICING, PlanType } from '@/lib/types.monetization';
+import { Colors } from '@/constants/Colors';
 
 interface PlansComparisonProps {
   currentPlan?: PlanType;
   onSelectPlan?: (plan: PlanType) => void;
   isLoading?: boolean;
 }
+
+const PLAN_LABELS: Record<PlanType, string> = {
+  free: 'Gratuito',
+  essential: 'Essential',
+  guardian: 'Guardião',
+};
 
 const FEATURES_ORDER = [
   { key: 'dailyChecklist', label: 'Checklist diário' },
@@ -27,89 +34,223 @@ const FEATURES_ORDER = [
   { key: 'community', label: 'Comunidade' },
 ];
 
+const plans: PlanType[] = ['free', 'essential', 'guardian'];
+
+function featureDisplay(value: boolean | number | undefined): string {
+  if (typeof value === 'boolean') return value ? '✓' : '—';
+  if (typeof value === 'number') return value === -1 ? '∞' : String(value);
+  return '—';
+}
+
 export function PlansComparison({
   currentPlan = 'free',
   onSelectPlan,
   isLoading = false,
 }: PlansComparisonProps) {
-  const plans: PlanType[] = ['free', 'essential', 'guardian'];
-
   return (
-    <ScrollView className="flex-1 bg-black">
-      <View className="px-4 pt-6 pb-8">
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+
         {/* Header */}
-        <Text className="text-2xl font-bold text-white mb-2">Escolha seu plano</Text>
-        <Text className="text-sm text-gray-400 mb-6">
-          Todas as funções são protegidas por RLS. Seus dados são seus.
+        <Text
+          style={{
+            color: Colors.gold,
+            fontSize: 11,
+            letterSpacing: 3.5,
+            marginBottom: 12,
+          }}
+        >
+          SEU PLANO
+        </Text>
+        <Text
+          style={{
+            fontFamily: 'CormorantGaramond',
+            color: Colors.text,
+            fontSize: 34,
+            lineHeight: 40,
+            marginBottom: 6,
+          }}
+        >
+          Escolha sua proteção
+        </Text>
+        <Text style={{ color: Colors.muted, fontSize: 14, marginBottom: 28 }}>
+          Todos os planos têm acesso ao Protocolo de Emergência sem limites.
         </Text>
 
-        {/* Plans grid */}
-        <View className="flex-row gap-4 mb-8">
-          {plans.map((plan) => (
-            <View
-              key={plan}
-              className={`flex-1 rounded-lg p-4 border ${
-                currentPlan === plan
-                  ? 'border-amber-400 bg-gray-900'
-                  : 'border-gray-700 bg-gray-800'
-              }`}
-            >
-              <Text className="text-lg font-bold text-white capitalize">{plan}</Text>
-
-              {plan !== 'free' && (
-                <>
-                  <Text className="text-lg font-bold text-amber-400 mt-2">
-                    R$ {PRICING[plan as 'essential' | 'guardian'].monthly.toFixed(2)}/mês
-                  </Text>
-                  <Text className="text-xs text-gray-400">
-                    ou R$ {PRICING[plan as 'essential' | 'guardian'].annual.toFixed(0)}/ano
-                  </Text>
-                </>
-              )}
-
-              {currentPlan === plan && (
-                <Text className="text-xs text-amber-400 mt-2">✓ Seu plano atual</Text>
-              )}
-
-              {plan !== currentPlan && plan !== 'free' && (
-                <TouchableOpacity
-                  disabled={isLoading}
-                  onPress={() => onSelectPlan?.(plan)}
-                  className="mt-4 bg-amber-400 rounded py-2"
+        {/* Grid de planos */}
+        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 28 }}>
+          {plans.map((plan) => {
+            const isCurrent = currentPlan === plan;
+            return (
+              <View
+                key={plan}
+                style={{
+                  flex: 1,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: isCurrent ? Colors.gold : Colors.border,
+                  backgroundColor: isCurrent ? `${Colors.gold}10` : Colors.surface,
+                  padding: 12,
+                }}
+              >
+                <Text
+                  style={{
+                    color: isCurrent ? Colors.gold : Colors.muted,
+                    fontSize: 10,
+                    letterSpacing: 1.5,
+                    marginBottom: 4,
+                  }}
                 >
-                  <Text className="text-center font-bold text-black">
-                    {isLoading ? 'Processando...' : 'Fazer upgrade'}
+                  {PLAN_LABELS[plan].toUpperCase()}
+                </Text>
+
+                {plan !== 'free' ? (
+                  <>
+                    <Text
+                      style={{
+                        fontFamily: 'CormorantGaramond',
+                        color: Colors.gold,
+                        fontSize: 20,
+                        lineHeight: 24,
+                      }}
+                    >
+                      R${PRICING[plan as 'essential' | 'guardian'].monthly.toFixed(0)}
+                    </Text>
+                    <Text style={{ color: Colors.mutedDark, fontSize: 10, marginBottom: 8 }}>
+                      /mês
+                    </Text>
+                  </>
+                ) : (
+                  <Text
+                    style={{
+                      fontFamily: 'CormorantGaramond',
+                      color: Colors.text,
+                      fontSize: 20,
+                      lineHeight: 24,
+                      marginBottom: 8,
+                    }}
+                  >
+                    Grátis
                   </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          ))}
+                )}
+
+                {isCurrent ? (
+                  <Text style={{ color: Colors.gold, fontSize: 11 }}>✓ Seu plano</Text>
+                ) : plan !== 'free' ? (
+                  <Pressable
+                    disabled={isLoading}
+                    onPress={() => onSelectPlan?.(plan)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Fazer upgrade para ${PLAN_LABELS[plan]}`}
+                    style={({ pressed }) => ({
+                      marginTop: 4,
+                      backgroundColor: Colors.gold,
+                      borderRadius: 8,
+                      paddingVertical: 7,
+                      opacity: isLoading || pressed ? 0.7 : 1,
+                    })}
+                  >
+                    <Text
+                      style={{
+                        textAlign: 'center',
+                        color: Colors.bg,
+                        fontSize: 12,
+                        fontWeight: '700',
+                      }}
+                    >
+                      {isLoading ? '…' : 'Upgrade'}
+                    </Text>
+                  </Pressable>
+                ) : null}
+              </View>
+            );
+          })}
         </View>
 
-        {/* Features comparison */}
-        <View className="border border-gray-700 rounded-lg overflow-hidden">
+        {/* Tabela comparativa */}
+        <View
+          style={{
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            overflow: 'hidden',
+            marginBottom: 24,
+          }}
+        >
+          {/* Cabeçalho da tabela */}
+          <View
+            style={{
+              flexDirection: 'row',
+              backgroundColor: Colors.surfaceRaised,
+              borderBottomWidth: 1,
+              borderBottomColor: Colors.border,
+            }}
+          >
+            <View style={{ flex: 2, padding: 10 }}>
+              <Text style={{ color: Colors.muted, fontSize: 11, letterSpacing: 1.5 }}>
+                RECURSO
+              </Text>
+            </View>
+            {plans.map((plan) => (
+              <View
+                key={plan}
+                style={{
+                  flex: 1,
+                  padding: 10,
+                  alignItems: 'center',
+                  borderLeftWidth: 1,
+                  borderLeftColor: Colors.border,
+                }}
+              >
+                <Text
+                  style={{
+                    color: currentPlan === plan ? Colors.gold : Colors.muted,
+                    fontSize: 10,
+                    letterSpacing: 1,
+                  }}
+                >
+                  {PLAN_LABELS[plan].toUpperCase().slice(0, 4)}
+                </Text>
+              </View>
+            ))}
+          </View>
+
           {FEATURES_ORDER.map((feature, idx) => (
             <View
               key={feature.key}
-              className={`flex-row ${idx % 2 === 0 ? 'bg-gray-900' : 'bg-black'}`}
+              style={{
+                flexDirection: 'row',
+                backgroundColor: idx % 2 === 0 ? Colors.surface : Colors.bg,
+                borderTopWidth: idx === 0 ? 0 : 1,
+                borderTopColor: Colors.border,
+              }}
             >
-              <View className="flex-1 p-3 border-r border-gray-700">
-                <Text className="text-sm text-white">{feature.label}</Text>
+              <View style={{ flex: 2, padding: 10, justifyContent: 'center' }}>
+                <Text style={{ color: Colors.text, fontSize: 13 }}>{feature.label}</Text>
               </View>
-
               {plans.map((plan) => {
-                const featureValue = PLAN_FEATURES[plan][feature.key];
-                let display = '—';
-
-                if (typeof featureValue === 'boolean') {
-                  display = featureValue ? '✓' : '—';
-                } else if (typeof featureValue === 'number') {
-                  display = featureValue === -1 ? '∞' : `${featureValue}`;
-                }
-
+                const raw = PLAN_FEATURES[plan][feature.key as keyof typeof PLAN_FEATURES[typeof plan]];
+                const display = featureDisplay(raw as boolean | number | undefined);
+                const isActive = display !== '—';
                 return (
-                  <View key={`${plan}-${feature.key}`} className="flex-1 p-3 border-r border-gray-700">
-                    <Text className={`text-center text-sm ${display === '—' ? 'text-gray-600' : 'text-amber-400 font-bold'}`}>
+                  <View
+                    key={`${plan}-${feature.key}`}
+                    style={{
+                      flex: 1,
+                      padding: 10,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderLeftWidth: 1,
+                      borderLeftColor: Colors.border,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontWeight: isActive ? '700' : '400',
+                        color: isActive ? Colors.gold : Colors.mutedDark,
+                      }}
+                    >
                       {display}
                     </Text>
                   </View>
@@ -119,15 +260,28 @@ export function PlansComparison({
           ))}
         </View>
 
-        {/* Disclaimer */}
-        <View className="mt-8 p-4 bg-gray-900 rounded-lg border border-gray-700">
-          <Text className="text-xs text-gray-400">
-            Este app não substitui psiquiatra, psicólogo ou grupos de apoio.{'\n\n'}
-            Em crise aguda, procure CVV (188) ou CAPS mais próximo.{'\n\n'}
-            Todos os planos têm acesso ao Protocolo de Emergência sem limites.
+        {/* Disclaimer + CVV */}
+        <View
+          style={{
+            padding: 16,
+            backgroundColor: Colors.surface,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            gap: 8,
+          }}
+        >
+          <Text style={{ color: Colors.muted, fontSize: 12, lineHeight: 18 }}>
+            Este app complementa — nunca substitui — psiquiatras, psicólogos ou grupos de apoio.
+          </Text>
+          <Text style={{ color: Colors.mutedDark, fontSize: 12, lineHeight: 18 }}>
+            Em crise, procure CVV (188) ou o CAPS mais próximo.
+          </Text>
+          <Text style={{ color: Colors.mutedDark, fontSize: 11, lineHeight: 16 }}>
+            Todos os seus dados são protegidos por RLS — apenas você acessa.
           </Text>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

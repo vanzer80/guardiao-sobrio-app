@@ -174,7 +174,7 @@ export default function OnboardingScreen() {
     }
 
     setLoading(false);
-    router.replace('/(tabs)');
+    router.replace('/(auth)/ativacao');
   };
 
   return (

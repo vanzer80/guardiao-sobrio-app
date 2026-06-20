@@ -311,6 +311,30 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
   - `fieldLabel` (idle): JetBrains Mono 11px letter-spacing 2
 - **DoD:** ✅ typecheck verde · ✅ lint verde · ✅ 68/68 testes passando · ✅ hard rules auditadas · ✅ zero promessas de cura
 
+### Sprint 9 — Fluxo de Entrada Premium + Auth Polish ✅ CONCLUÍDO (19/06/2026)
+
+- [x] **6 novas telas de entrada** seguindo o fluxo Welcome → onboarding (3 passos) → register → setup → ativacao → (tabs):
+  - `app/(auth)/welcome.tsx` — hero foto full-bleed com LinearGradient noir, eyebrow "DA TRINCHEIRA", título serifado + "É construção." em itálico ouro
+  - `app/(auth)/onboarding/motivo.tsx` — passo 1/3: motivo da jornada (3 opções), barra de progresso segmentada
+  - `app/(auth)/onboarding/tempo.tsx` — passo 2/3: tempo em sobriedade (4 opções), params encadeados
+  - `app/(auth)/onboarding/desafio.tsx` — passo 3/3: principal desafio (4 opções), botão "Criar minha conta"
+  - `app/(auth)/ativacao.tsx` — celebração pós-setup: ring dourado animado (Animated.spring entrada + Animated.loop pulsante), contador de dias, redirect para (tabs)
+  - `app/(auth)/onboarding/_layout.tsx` — Stack aninhado para o sub-grupo de onboarding
+- [x] **`app/(auth)/onboarding.tsx` renomeado para `setup.tsx`** — evita conflito entre arquivo e diretório de mesmo nome no Expo Router
+- [x] **`app/(auth)/register.tsx` reescrito** — OAuth Google + Apple (PKCE via WebBrowser + exchangeCodeForSession), confirm email state inline ("Já confirmei" polling getSession), eyebrow + título serifado, disclaimers CVV/CAPS; params motivo/tempo/desafio encadeados do onboarding
+- [x] **`app/(auth)/login.tsx` polido** — eyebrow "BEM-VINDO DE VOLTA", título "O Guardião / Sóbrio" em CormorantGaramond regular + itálico ouro, disclaimers CVV/CAPS
+- [x] **`components/PlansComparison.tsx` reescrito** — removidos todos os `className` NativeWind; inline styles com tokens `Colors.*`; SafeAreaView, plan cards com borderColor ouro no plano atual, tabela comparativa com fundo alternado, disclaimer completo
+- [x] **Guard `app/_layout.tsx` atualizado** — redirect inicial para `/(auth)/welcome` (era login); `isSetup` e `isAtivacao` como exceções no guard pós-onboarding; `<Stack.Screen name="plans" />` órfão removido (eliminava warning "No route named 'plans'")
+- [x] **`lib/database.types.ts`** — colunas `onboarding_motivo`, `onboarding_tempo`, `onboarding_desafio` adicionadas em Row/Insert/Update de profiles
+- [x] **Migration aplicada** — `supabase/migrations/20260619220000_add_onboarding_context.sql` (3 colunas TEXT nullable em public.profiles)
+- [x] **Teste de integração** `__tests__/db.profiles_onboarding_columns.test.ts` — 4 testes verificam as 3 colunas via PostgREST com `node:https` (bypass do fetch stub do jest-expo/winter); **4/4 passando**
+- **DoD:** ✅ typecheck verde · ✅ lint verde · ✅ 72 testes passando · ✅ hard rules auditadas · ✅ OAuth estruturado (pendente config providers no Dashboard)
+
+**Pendente de configuração externa (não-dev):**
+- [ ] Google OAuth: habilitar no Dashboard → Authentication → Providers + Client ID/Secret do Google Cloud
+- [ ] Apple OAuth: Service ID + private key da Apple Developer Account
+- [ ] Redirect URL `guardiaosobrio:///` adicionada em Authentication → URL Configuration
+
 ### Pendentes
 - [ ] Comunidade O Escudo (feed curado, posts anônimos, moderação do criador) — DA4 aberta
 - [ ] Notificações de comunidade (opt-in)
@@ -370,7 +394,7 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 | Startup (mid-range) | < 2s |
 | Completar checklist | < 3 min |
 | SOS acessível em | 2 toques |
-| Cobertura de testes (negócio) | > 60% · **68 testes unitários ativos** (sobriety, protocolo, fundamentos, monetização, stripe, programa30) |
+| Cobertura de testes (negócio) | > 60% · **72 testes ativos** (sobriety, protocolo, fundamentos, monetização, stripe, programa30 + 4 integração banco) |
 | LGPD: excluir conta | 2 toques |
 | Acessibilidade | WCAG AA |
 | Promessas de cura | zero (auditoria por release) |
