@@ -212,7 +212,7 @@ export function PlansComparison({
           Escolha sua proteção
         </Text>
         <Text style={{ color: Colors.muted, fontSize: 14, marginBottom: 28 }}>
-          Todos os planos têm acesso ao Protocolo de Emergência sem limites.
+          O Protocolo de Emergência jamais é bloqueado durante uma crise — independentemente do plano.
         </Text>
 
         {/* Banner de trial — exibido apenas para usuários free */}

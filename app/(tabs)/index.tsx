@@ -475,7 +475,7 @@ export default function HojeScreen() {
           />
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
             <Text style={{ fontSize: 12, color: diaryText.trim().length >= MIN_CHARS ? Colors.success : Colors.muted }}>
-              {diaryText.trim().length}/{MIN_CHARS} mín.{diaryEntry ? ' · editável' : ''}
+              {diaryText.trim().length}/{MIN_CHARS} caracteres mín.{diaryEntry ? ' · editável' : ''}
             </Text>
             <Pressable
               onPress={handleSaveDiary}
