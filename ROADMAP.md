@@ -339,6 +339,14 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 - [ ] Apple OAuth: Service ID + private key da Apple Developer Account
 - [ ] Redirect URL `guardiaosobrio:///` adicionada em Authentication → URL Configuration
 
+### Sprint 10 — Auth Bugfixes ✅ CONCLUÍDO (20/06/2026)
+
+- [x] **OAuth callback (web):** `useLocalSearchParams` retornava `code=undefined` no primeiro render de hidratação; guard agora aguarda o re-render com o valor real (`if (code === undefined) return`) em vez de redirecionar imediatamente para `/login`; ref `attempted` previne dupla troca; timeout de 10s como fallback — `app/(auth)/callback.tsx`
+- [x] **Logout (web):** `Alert.alert` na web delega para `window.confirm()`, que browsers modernos bloqueiam em handlers assíncronos do React (botão aparecia inerte); substituído por `window.confirm()` síncrono no branch `Platform.OS === 'web'` — `app/(tabs)/perfil.tsx`
+- [x] **Logout — stores explícitos:** `setSession(null)` agora chamado diretamente em `handleSignOut` (além de depender do `onAuthStateChange`), eliminando risco de estado inconsistente se o evento atrasar
+- [x] **Logout — scope:** `signOut({ scope: 'global' })` explícito (server-side revocation)
+- **DoD:** ✅ typecheck verde · ✅ lint verde · ✅ 81/81 testes passando · ✅ hard rules auditadas
+
 ### Pendentes
 - [ ] Comunidade O Escudo (feed curado, posts anônimos, moderação do criador) — DA4 aberta
 - [ ] Notificações de comunidade (opt-in)
@@ -413,7 +421,7 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 | Startup (mid-range) | < 2s |
 | Completar checklist | < 3 min |
 | SOS acessível em | 2 toques |
-| Cobertura de testes (negócio) | > 60% · **72 testes ativos** (sobriety, protocolo, fundamentos, monetização, stripe, programa30 + 4 integração banco) |
+| Cobertura de testes (negócio) | > 60% · **81 testes ativos** (sobriety, protocolo, fundamentos, monetização, stripe, programa30 + 4 integração banco) |
 | LGPD: excluir conta | 2 toques |
 | Acessibilidade | WCAG AA |
 | Promessas de cura | zero (auditoria por release) |

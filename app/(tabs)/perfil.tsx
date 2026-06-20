@@ -7,6 +7,7 @@ import {
   Alert,
   ActivityIndicator,
   Linking,
+  Platform,
   Switch,
   TextInput,
 } from 'react-native';
@@ -16,6 +17,7 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import { isBiometricLockEnabled, setBiometricLockEnabled } from '@/lib/appLock';
 import { supabase } from '@/lib/supabase';
 import { useProfileStore } from '@/hooks/useProfileStore';
+import { useAuthStore } from '@/hooks/useAuthStore';
 import { daysSince } from '@/lib/sobriety';
 import { Colors } from '@/constants/Colors';
 import { Button } from '@/components/ui/Button';
@@ -36,6 +38,7 @@ const PLAN_LABEL: Record<string, string> = {
 export default function PerfilScreen() {
   const router = useRouter();
   const { profile: storeProfile, setProfile: setStoreProfile } = useProfileStore();
+  const { setSession } = useAuthStore();
   const plan = usePlanStore((s) => s.plan);
   const [profile, setProfile] = useState<Profile | null>(storeProfile);
   const [loading, setLoading] = useState(!storeProfile);
@@ -103,26 +106,34 @@ export default function PerfilScreen() {
     setEditingName(false);
   };
 
+  const performSignOut = async () => {
+    setSignOutLoading(true);
+    try {
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
+      if (error) throw error;
+      // Limpa stores explicitamente; onAuthStateChange também dispara em _layout,
+      // mas chamada direta garante consistência se o evento atrasar.
+      setStoreProfile(null);
+      setSession(null);
+      router.replace('/(auth)/welcome');
+    } catch (err) {
+      Alert.alert('Erro ao sair', err instanceof Error ? err.message : 'Tente novamente.');
+    } finally {
+      setSignOutLoading(false);
+    }
+  };
+
   const handleSignOut = () => {
+    if (Platform.OS === 'web') {
+      // Alert.alert na web delega para window.confirm(), que browsers modernos
+      // bloqueiam quando chamado dentro de handlers assíncronos do React.
+      // window.confirm() síncrono direto é confiável e não é bloqueado.
+      if (window.confirm('Tem certeza que deseja sair da conta?')) performSignOut();
+      return;
+    }
     Alert.alert('Sair da conta', 'Tem certeza que deseja sair?', [
       { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Sair',
-        style: 'destructive',
-        onPress: async () => {
-          setSignOutLoading(true);
-          try {
-            const { error } = await supabase.auth.signOut();
-            if (error) throw error;
-            setStoreProfile(null);
-            router.replace('/(auth)/welcome');
-          } catch (err) {
-            Alert.alert('Erro ao sair', err instanceof Error ? err.message : 'Tente novamente.');
-          } finally {
-            setSignOutLoading(false);
-          }
-        },
-      },
+      { text: 'Sair', style: 'destructive', onPress: performSignOut },
     ]);
   };
 
