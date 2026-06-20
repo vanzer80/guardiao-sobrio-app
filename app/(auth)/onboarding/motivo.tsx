@@ -1,5 +1,5 @@
 import { View, Text, SafeAreaView, ScrollView, Pressable } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
@@ -14,13 +14,14 @@ const OPTIONS = [
 
 export default function MotivoScreen() {
   const router = useRouter();
+  const { mode } = useLocalSearchParams<{ mode?: string }>();
   const [selected, setSelected] = useState('');
 
   const handleContinue = () => {
     saveOnboardingDraft({ motivo: selected });
     router.push({
       pathname: '/(auth)/onboarding/tempo',
-      params: { motivo: selected },
+      params: { motivo: selected, ...(mode ? { mode } : {}) },
     });
   };
 

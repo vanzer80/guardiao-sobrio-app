@@ -15,14 +15,14 @@ const OPTIONS = [
 
 export default function TempoScreen() {
   const router = useRouter();
-  const { motivo } = useLocalSearchParams<{ motivo: string }>();
+  const { motivo, mode } = useLocalSearchParams<{ motivo: string; mode?: string }>();
   const [selected, setSelected] = useState('');
 
   const handleContinue = () => {
     saveOnboardingDraft({ tempo: selected });
     router.push({
       pathname: '/(auth)/onboarding/desafio',
-      params: { motivo: motivo ?? '', tempo: selected },
+      params: { motivo: motivo ?? '', tempo: selected, ...(mode ? { mode } : {}) },
     });
   };
 

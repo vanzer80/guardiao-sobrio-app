@@ -91,6 +91,18 @@ export default function WelcomeScreen() {
             </Text>
           </Pressable>
 
+          {/* Acesso sem cadastro — link textual discreto para não competir com o CTA */}
+          <Pressable
+            onPress={() => router.push({ pathname: '/(auth)/onboarding/motivo', params: { mode: 'guest' } })}
+            accessibilityRole="button"
+            accessibilityLabel="Explorar o app sem criar uma conta"
+            style={{ marginTop: 4, alignItems: 'center', padding: 12 }}
+          >
+            <Text style={{ color: Colors.mutedDark, fontSize: 13, textDecorationLine: 'underline' }}>
+              Explorar sem cadastro
+            </Text>
+          </Pressable>
+
           {/* Disclaimers hard rule */}
           <Text
             style={{

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { PlanType, SubscriptionStatus } from '@/lib/types.monetization';
 import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/hooks/useAuthStore';
 
 const FEATURE_MAP: Record<PlanType, string[]> = {
   free: ['dailyChecklist', 'sobrietyCounter', 'emergencyProtocol'],
@@ -79,6 +80,8 @@ export const usePlanStore = create<PlanState>((set, get) => ({
 
   getEffectivePlan: () => {
     const state = get();
+    const { isAnonymous } = useAuthStore.getState();
+    if (isAnonymous) return 'guardian';
     return state.isInTrial() ? 'guardian' : state.plan;
   },
 

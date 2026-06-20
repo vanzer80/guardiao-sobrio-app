@@ -202,10 +202,12 @@ export type Database = {
       }
       profiles: {
         Row: {
+          anonymous_created_at: string | null
           avatar_url: string | null
           created_at: string
           full_name: string | null
           id: string
+          is_anonymous: boolean
           is_premium: boolean
           onboarding_completed: boolean
           onboarding_desafio: string | null
@@ -221,10 +223,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          anonymous_created_at?: string | null
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
           id: string
+          is_anonymous?: boolean
           is_premium?: boolean
           onboarding_completed?: boolean
           onboarding_desafio?: string | null
@@ -240,10 +244,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          anonymous_created_at?: string | null
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
+          is_anonymous?: boolean
           is_premium?: boolean
           onboarding_completed?: boolean
           onboarding_desafio?: string | null

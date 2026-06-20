@@ -1,8 +1,9 @@
-import { Tabs, useRouter } from 'expo-router';
+import { Tabs, useRouter, useSegments } from 'expo-router';
 import { Pressable, View, Animated } from 'react-native';
 import { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
+import { AnonymousBanner } from '@/components/AnonymousBanner';
 
 function SosButton() {
   const router = useRouter();
@@ -63,8 +64,13 @@ function SosButton() {
 }
 
 export default function TabLayout() {
+  const segments = useSegments();
+  const isSOSScreen = (segments as string[]).includes('protocolo');
+
   return (
-    <Tabs
+    <View style={{ flex: 1 }}>
+      {!isSOSScreen && <AnonymousBanner />}
+      <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
@@ -124,5 +130,6 @@ export default function TabLayout() {
       {/* Hidden from tab bar */}
       <Tabs.Screen name="plans" options={{ href: null }} />
     </Tabs>
+    </View>
   );
 }

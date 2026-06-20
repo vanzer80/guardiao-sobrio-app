@@ -1,6 +1,7 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { AppState, Platform, View, Text, Pressable } from 'react-native';
+import { AnonymousExpiredModal } from '@/components/AnonymousExpiredModal';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import * as LocalAuthentication from 'expo-local-authentication';
@@ -41,6 +42,7 @@ export default function RootLayout() {
   // Usamos setTimeout 0 (async do ponto de vista do lint) para satisfazer
   // react-hooks/set-state-in-effect e ainda garantir o guard de hidratação.
   const [locked, setLocked] = useState(false);
+  const [anonymousExpired, setAnonymousExpired] = useState(false);
   const appState = useRef(AppState.currentState);
 
   useEffect(() => {
@@ -119,6 +121,14 @@ export default function RootLayout() {
         setTrialEnd(data?.trial_end ?? null);
         setTrialActivatedAt(data?.trial_activated_at ?? null);
         setProfileLoading(false);
+
+        if (data?.is_anonymous && data?.anonymous_created_at) {
+          const created = new Date(data.anonymous_created_at).getTime();
+          const expired = Date.now() > created + 5 * 24 * 60 * 60 * 1000;
+          if (expired) setAnonymousExpired(true);
+        } else {
+          setAnonymousExpired(false);
+        }
       });
   }, [userId, setProfile, setProfileLoading, setPlan, setTrialEnd, setTrialActivatedAt]);
 
@@ -131,6 +141,8 @@ export default function RootLayout() {
     const isSetup = segs[1] === 'setup';
     // ativacao = tela de celebração exibida APÓS o setup; não redirecionar para tabs ainda
     const isAtivacao = segs[1] === 'ativacao';
+    // convert = tela de criação de conta para usuário anônimo; não redirecionar para tabs
+    const isConvert = segs[1] === 'convert';
 
     if (!session) {
       SplashScreen.hideAsync();
@@ -145,12 +157,15 @@ export default function RootLayout() {
     if (!profile?.onboarding_completed) {
       // Setup incompleto — leva (ou mantém) o usuário na tela de setup.
       if (!isSetup) router.replace('/(auth)/setup');
-    } else if (inAuthGroup && !isAtivacao) {
+    } else if (inAuthGroup && !isAtivacao && !isConvert) {
       router.replace('/(tabs)');
     }
   }, [session, isLoading, segments, profile, profileLoading, router]);
 
   if (!hydrated || !fontsLoaded) return null;
+
+  const segsNow = segments as string[];
+  const isSOSScreen = segsNow.includes('protocolo');
 
   return (
     <>
@@ -161,6 +176,16 @@ export default function RootLayout() {
         <Stack.Screen name="stats" />
         <Stack.Screen name="+not-found" />
       </Stack>
+      {!isSOSScreen && (
+        <AnonymousExpiredModal
+          visible={anonymousExpired}
+          onConvert={() => {
+            setAnonymousExpired(false);
+            router.push('/(auth)/convert');
+          }}
+          onDismiss={() => setAnonymousExpired(false)}
+        />
+      )}
       {locked && (
         <View
           style={{

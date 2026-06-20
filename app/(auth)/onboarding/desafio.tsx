@@ -1,10 +1,11 @@
-import { View, Text, SafeAreaView, ScrollView, Pressable } from 'react-native';
+import { View, Text, SafeAreaView, ScrollView, Pressable, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { Button } from '@/components/ui/Button';
-import { saveOnboardingDraft } from '@/lib/onboardingStore';
+import { saveOnboardingDraft, readOnboardingDraft } from '@/lib/onboardingStore';
+import { signInAsGuest } from '@/lib/anonymousAuth';
 
 const OPTIONS = [
   { key: 'comecar', label: 'Não sei por onde começar' },
@@ -15,11 +16,32 @@ const OPTIONS = [
 
 export default function DesafioScreen() {
   const router = useRouter();
-  const { motivo, tempo } = useLocalSearchParams<{ motivo: string; tempo: string }>();
+  const { motivo, tempo, mode } = useLocalSearchParams<{ motivo: string; tempo: string; mode?: string }>();
+  const isGuest = mode === 'guest';
   const [selected, setSelected] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     saveOnboardingDraft({ desafio: selected });
+
+    if (isGuest) {
+      try {
+        setLoading(true);
+        const draft = readOnboardingDraft();
+        await signInAsGuest({
+          motivo: motivo ?? draft.motivo ?? '',
+          tempo: tempo ?? draft.tempo ?? '',
+          desafio: selected,
+        });
+        // _layout.tsx detectará a sessão e navegará para (tabs) automaticamente
+      } catch {
+        Alert.alert('Erro', 'Não foi possível iniciar. Verifique sua conexão e tente novamente.');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     router.push({
       pathname: '/(auth)/register',
       params: {
@@ -108,7 +130,12 @@ export default function DesafioScreen() {
         </View>
 
         <View style={{ marginTop: 40 }}>
-          <Button title="Criar minha conta" onPress={handleContinue} disabled={!selected} />
+          <Button
+            title={isGuest ? 'Começar a explorar' : 'Criar minha conta'}
+            onPress={handleContinue}
+            disabled={!selected}
+            loading={loading}
+          />
         </View>
 
         <Text
