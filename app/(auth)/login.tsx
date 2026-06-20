@@ -1,9 +1,11 @@
-import { View, Text, SafeAreaView, ScrollView, Pressable, Alert } from 'react-native';
+import { View, Text, SafeAreaView, ScrollView, Pressable, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState } from 'react';
+import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/Colors';
 import { Button } from '@/components/ui/Button';
@@ -19,6 +21,7 @@ type FormData = z.infer<typeof schema>;
 export default function LoginScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState<'google' | 'apple' | null>(null);
 
   const {
     control,
@@ -38,6 +41,52 @@ export default function LoginScreen() {
       Alert.alert('Erro ao entrar', error.message);
     }
     // _layout.tsx redireciona automaticamente quando a sessão mudar
+  };
+
+  // Mesmo fluxo PKCE do /register — login e cadastro têm as mesmas opções sociais
+  // para evitar que quem cadastrou pelo social fique sem como logar.
+  const handleOAuth = async (provider: 'google' | 'apple') => {
+    setOauthLoading(provider);
+    try {
+      const redirectUrl = Linking.createURL('/');
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (error || !data.url) {
+        Alert.alert(
+          'Erro',
+          'Não foi possível iniciar o login social. Verifique se o provedor está configurado.',
+        );
+        return;
+      }
+
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+
+      if (result.type === 'success') {
+        const url = new URL(result.url);
+        const code = url.searchParams.get('code');
+
+        if (code) {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError) {
+            Alert.alert('Erro de autenticação', exchangeError.message);
+          }
+          // onAuthStateChange em _layout.tsx detecta a sessão e redireciona
+        } else {
+          await supabase.auth.getSession();
+        }
+      }
+    } catch {
+      Alert.alert('Erro', 'Não foi possível completar o login.');
+    } finally {
+      setOauthLoading(null);
+    }
   };
 
   return (
@@ -84,7 +133,8 @@ export default function LoginScreen() {
           Sobriedade não é abstinência. É construção.
         </Text>
 
-        <View style={{ gap: 16 }}>
+        {/* Formulário */}
+        <View style={{ gap: 16, marginBottom: 24 }}>
           <Controller
             control={control}
             name="email"
@@ -118,10 +168,50 @@ export default function LoginScreen() {
             )}
           />
 
-          <Button title="Entrar" onPress={handleSubmit(onLogin)} loading={loading} />
+          <Button
+            title="Entrar"
+            onPress={handleSubmit(onLogin)}
+            loading={loading}
+            disabled={oauthLoading !== null}
+          />
         </View>
 
-        <View style={{ marginTop: 32, alignItems: 'center', gap: 12 }}>
+        {/* Divisor "ou" */}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12,
+            marginBottom: 16,
+          }}
+        >
+          <View style={{ flex: 1, height: 1, backgroundColor: Colors.border }} />
+          <Text style={{ color: Colors.muted, fontSize: 13 }}>ou</Text>
+          <View style={{ flex: 1, height: 1, backgroundColor: Colors.border }} />
+        </View>
+
+        {/* OAuth — mesmas opções do /register */}
+        <View style={{ gap: 10, marginBottom: 32 }}>
+          <Button
+            title={oauthLoading === 'google' ? 'Aguarde...' : 'Continuar com Google'}
+            variant="secondary"
+            onPress={() => handleOAuth('google')}
+            disabled={loading || oauthLoading !== null}
+            loading={oauthLoading === 'google'}
+          />
+          {Platform.OS === 'ios' && (
+            <Button
+              title={oauthLoading === 'apple' ? 'Aguarde...' : 'Continuar com Apple'}
+              variant="secondary"
+              onPress={() => handleOAuth('apple')}
+              disabled={loading || oauthLoading !== null}
+              loading={oauthLoading === 'apple'}
+            />
+          )}
+        </View>
+
+        {/* Link cadastro */}
+        <View style={{ alignItems: 'center' }}>
           <Pressable
             onPress={() => router.push('/(auth)/register')}
             accessibilityRole="button"

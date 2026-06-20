@@ -15,6 +15,7 @@ import { useState } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { supabase } from '@/lib/supabase';
+import { readOnboardingDraft } from '@/lib/onboardingStore';
 import { Colors } from '@/constants/Colors';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -51,11 +52,16 @@ async function saveOnboardingContext(
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { motivo, tempo, desafio } = useLocalSearchParams<{
+  const { motivo: paramMotivo, tempo: paramTempo, desafio: paramDesafio } = useLocalSearchParams<{
     motivo?: string;
     tempo?: string;
     desafio?: string;
   }>();
+  // MMKV como fallback: se o app morreu e voltou sem os params de URL, lê do draft.
+  const [draft] = useState(() => readOnboardingDraft());
+  const motivo = paramMotivo || draft.motivo || '';
+  const tempo = paramTempo || draft.tempo || '';
+  const desafio = paramDesafio || draft.desafio || '';
 
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<'google' | 'apple' | null>(null);
@@ -67,7 +73,6 @@ export default function RegisterScreen() {
     control,
     handleSubmit,
     formState: { errors },
-    getValues,
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { email: '', password: '' },
@@ -142,9 +147,11 @@ export default function RegisterScreen() {
         const code = url.searchParams.get('code');
 
         if (code) {
-          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          const { data: authData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
           if (exchangeError) {
             Alert.alert('Erro de autenticação', exchangeError.message);
+          } else if (authData.session) {
+            await saveOnboardingContext(authData.session.user.id, motivo, tempo, desafio);
           }
           // onAuthStateChange em _layout.tsx detecta a sessão e redireciona
         } else {

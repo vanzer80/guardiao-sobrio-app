@@ -18,6 +18,7 @@ import {
   registerForPushNotificationsAsync,
   scheduleDailyReminder,
 } from '@/lib/notifications';
+import { readOnboardingDraft, clearOnboardingDraft } from '@/lib/onboardingStore';
 
 const SUBSTANCE_OPTIONS = [
   { key: 'alcool', label: 'Álcool' },
@@ -55,6 +56,19 @@ function parseDateBR(input: string): string | null {
   return `${year}-${mm}-${dd}`;
 }
 
+// Converte a resposta do onboarding "tempo" em uma data pré-preenchida (DD/MM/AAAA).
+// '30mais' é deixado em branco: o usuário sabe a data exata melhor do que nós.
+function tempoToDateInput(tempo: string): string {
+  const offsets: Record<string, number> = { agora: 0, '1a7': 3, '8a30': 14 };
+  const daysAgo = offsets[tempo];
+  if (daysAgo === undefined) return '';
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${dd}/${mm}/${d.getFullYear()}`;
+}
+
 function formatDateInput(raw: string): string {
   const digits = raw.replace(/\D/g, '').slice(0, 8);
   if (digits.length <= 2) return digits;
@@ -67,7 +81,10 @@ export default function OnboardingScreen() {
   const setProfile = useProfileStore((s) => s.setProfile);
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
-  const [dateInput, setDateInput] = useState('');
+  const [dateInput, setDateInput] = useState(() => {
+    const { tempo } = readOnboardingDraft();
+    return tempo ? tempoToDateInput(tempo) : '';
+  });
   const [substance, setSubstance] = useState('');
   const [loading, setLoading] = useState(false);
   const [dateError, setDateError] = useState('');
@@ -158,6 +175,7 @@ export default function OnboardingScreen() {
       .select()
       .single();
     if (updatedProfile) setProfile(updatedProfile);
+    clearOnboardingDraft();
 
     // Solicita permissão de notificação e agenda lembrete diário (opcional).
     try {

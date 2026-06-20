@@ -111,7 +111,16 @@ export default function PerfilScreen() {
         style: 'destructive',
         onPress: async () => {
           setSignOutLoading(true);
-          await supabase.auth.signOut();
+          try {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+            setStoreProfile(null);
+            router.replace('/(auth)/welcome');
+          } catch (err) {
+            Alert.alert('Erro ao sair', err instanceof Error ? err.message : 'Tente novamente.');
+          } finally {
+            setSignOutLoading(false);
+          }
         },
       },
     ]);

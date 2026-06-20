@@ -1,5 +1,5 @@
-import { View, Text, SafeAreaView, Animated } from 'react-native';
-import { useEffect, useRef } from 'react';
+import { View, Text, SafeAreaView, Animated, Platform } from 'react-native';
+import { useEffect, useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { useProfileStore } from '@/hooks/useProfileStore';
 import { Colors } from '@/constants/Colors';
@@ -18,10 +18,12 @@ export default function AtivacaoScreen() {
   const router = useRouter();
   const profile = useProfileStore((s) => s.profile);
   const daysSober = getDaysSober(profile?.sobriety_start_date);
+  // Dia 0 (data = hoje) mostra "01" — começar hoje é o Dia 1.
+  const displayDay = Math.max(1, daysSober);
 
-  const scale = useRef(new Animated.Value(0)).current;
-  const ringOpacity = useRef(new Animated.Value(0)).current;
-  const ringScale = useRef(new Animated.Value(1)).current;
+  const scale = useMemo(() => new Animated.Value(0), []);
+  const ringOpacity = useMemo(() => new Animated.Value(0), []);
+  const ringScale = useMemo(() => new Animated.Value(1), []);
 
   useEffect(() => {
     Animated.sequence([
@@ -29,18 +31,18 @@ export default function AtivacaoScreen() {
         toValue: 1,
         friction: 6,
         tension: 60,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }),
     ]).start(() => {
       Animated.loop(
         Animated.sequence([
           Animated.parallel([
-            Animated.timing(ringOpacity, { toValue: 0.55, duration: 1400, useNativeDriver: true }),
-            Animated.timing(ringScale, { toValue: 1.28, duration: 1400, useNativeDriver: true }),
+            Animated.timing(ringOpacity, { toValue: 0.55, duration: 1400, useNativeDriver: Platform.OS !== 'web' }),
+            Animated.timing(ringScale, { toValue: 1.28, duration: 1400, useNativeDriver: Platform.OS !== 'web' }),
           ]),
           Animated.parallel([
-            Animated.timing(ringOpacity, { toValue: 0, duration: 1400, useNativeDriver: true }),
-            Animated.timing(ringScale, { toValue: 1, duration: 1400, useNativeDriver: true }),
+            Animated.timing(ringOpacity, { toValue: 0, duration: 1400, useNativeDriver: Platform.OS !== 'web' }),
+            Animated.timing(ringScale, { toValue: 1, duration: 1400, useNativeDriver: Platform.OS !== 'web' }),
           ]),
         ]),
       ).start();
@@ -114,7 +116,7 @@ export default function AtivacaoScreen() {
                 lineHeight: 68,
               }}
             >
-              {daysSober}
+              {String(displayDay).padStart(2, '0')}
             </Text>
             <Text
               style={{
@@ -123,7 +125,7 @@ export default function AtivacaoScreen() {
                 letterSpacing: 2.5,
               }}
             >
-              {daysSober === 1 ? 'DIA' : 'DIAS'}
+              {displayDay === 1 ? 'DIA' : 'DIAS'}
             </Text>
           </Animated.View>
         </View>

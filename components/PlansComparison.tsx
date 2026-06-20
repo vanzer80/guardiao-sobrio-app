@@ -114,7 +114,7 @@ export function PlansComparison({
                         lineHeight: 24,
                       }}
                     >
-                      R${PRICING[plan as 'essential' | 'guardian'].monthly.toFixed(0)}
+                      R$ {PRICING[plan as 'essential' | 'guardian'].monthly.toFixed(2).replace('.', ',')}
                     </Text>
                     <Text style={{ color: Colors.mutedDark, fontSize: 10, marginBottom: 8 }}>
                       /mês
