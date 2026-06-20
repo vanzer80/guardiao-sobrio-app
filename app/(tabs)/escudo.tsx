@@ -251,19 +251,23 @@ function TriggerCard({ trigger, onDelete }: { trigger: UserTrigger; onDelete: (i
 function FamiliarSection({ userId }: { userId: string }) {
   const [conn, setConn] = useState<FamilyConnection | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [inviteName, setInviteName] = useState('');
   const [inviting, setInviting] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
   const [showInviteForm, setShowInviteForm] = useState(false);
 
   useEffect(() => {
+    if (!userId) return;
     let cancelled = false;
     (async () => {
       try {
         setLoading(true);
+        setLoadError(null);
         const c = await getActiveConnection(userId);
         if (!cancelled) setConn(c);
-      } catch {
-        // silent
+      } catch (err) {
+        if (!cancelled) setLoadError(err instanceof Error ? err.message : 'Erro ao carregar conexão.');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -273,17 +277,18 @@ function FamiliarSection({ userId }: { userId: string }) {
 
   const handleInvite = async () => {
     if (!inviteName.trim()) {
-      showAlert('Campo obrigatório', 'Informe o nome do familiar.');
+      setInviteError('Informe o nome do familiar.');
       return;
     }
     try {
       setInviting(true);
+      setInviteError(null);
       const c = await createInvite(userId, inviteName.trim());
       setConn(c);
       setShowInviteForm(false);
       setInviteName('');
     } catch (err) {
-      showAlert('Erro', err instanceof Error ? err.message : 'Não foi possível gerar o convite.');
+      setInviteError(err instanceof Error ? err.message : 'Não foi possível gerar o convite. Tente novamente.');
     } finally {
       setInviting(false);
     }
@@ -314,6 +319,14 @@ function FamiliarSection({ userId }: { userId: string }) {
   };
 
   if (loading) return <ActivityIndicator color={Colors.gold} style={{ marginTop: 12 }} />;
+
+  if (loadError) {
+    return (
+      <View style={{ backgroundColor: `${Colors.danger}11`, borderRadius: 12, padding: 16, borderWidth: 1, borderColor: Colors.danger }}>
+        <Text style={{ color: Colors.danger, fontSize: 13 }}>{loadError}</Text>
+      </View>
+    );
+  }
 
   // Conexão ativa (pending ou accepted)
   if (conn) {
@@ -380,22 +393,36 @@ function FamiliarSection({ userId }: { userId: string }) {
         <Text style={{ color: Colors.text, fontWeight: '700' }}>Convidar familiar</Text>
         <TextInput
           value={inviteName}
-          onChangeText={setInviteName}
+          onChangeText={(t) => { setInviteName(t); setInviteError(null); }}
           placeholder="Nome do familiar"
           placeholderTextColor={Colors.muted}
-          style={{ backgroundColor: Colors.surfaceRaised, color: Colors.text, padding: 14, borderRadius: 10, borderWidth: 1, borderColor: Colors.border }}
+          style={{
+            backgroundColor: Colors.surfaceRaised,
+            color: Colors.text,
+            padding: 14,
+            borderRadius: 10,
+            borderWidth: 1,
+            borderColor: inviteError && !inviteName.trim() ? Colors.danger : Colors.border,
+          }}
         />
-        <Text style={{ color: Colors.muted, fontSize: 12, lineHeight: 18 }}>
-          O familiar receberá um código de 6 dígitos válido por 48h. Ele verá apenas se seu dia foi guardado — sem diário, sem detalhes.
-        </Text>
+        {inviteError ? (
+          <Text style={{ color: Colors.danger, fontSize: 12, marginTop: -8 }}>{inviteError}</Text>
+        ) : (
+          <Text style={{ color: Colors.muted, fontSize: 12, lineHeight: 18 }}>
+            O familiar receberá um código de 6 dígitos válido por 48h. Ele verá apenas se seu dia foi guardado — sem diário, sem detalhes.
+          </Text>
+        )}
         <View style={{ flexDirection: 'row', gap: 10 }}>
-          <Pressable onPress={() => setShowInviteForm(false)} style={{ flex: 1, paddingVertical: 10, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: Colors.border }}>
+          <Pressable
+            onPress={() => { setShowInviteForm(false); setInviteError(null); setInviteName(''); }}
+            style={{ flex: 1, paddingVertical: 10, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: Colors.border }}
+          >
             <Text style={{ color: Colors.muted }}>Cancelar</Text>
           </Pressable>
           <Pressable
             onPress={handleInvite}
             disabled={inviting}
-            style={{ flex: 1, backgroundColor: Colors.gold, paddingVertical: 10, borderRadius: 8, alignItems: 'center' }}
+            style={{ flex: 1, backgroundColor: Colors.gold, paddingVertical: 10, borderRadius: 8, alignItems: 'center', opacity: inviting ? 0.7 : 1 }}
           >
             {inviting
               ? <ActivityIndicator color={Colors.bg} size="small" />

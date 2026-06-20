@@ -34,12 +34,14 @@ export async function createInvite(
   const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
 
   // Verifica se já existe uma conexão para este usuário (MVP: apenas 1)
-  const { data: existing } = await supabase
+  const { data: existing, error: selectError } = await supabase
     .from('family_connections')
     .select('id, invitation_status')
     .eq('user_id', userId)
     .neq('invitation_status', 'revoked')
     .maybeSingle();
+
+  if (selectError) throw new Error(selectError.message);
 
   if (existing) {
     // Renova token da conexão existente
@@ -57,7 +59,7 @@ export async function createInvite(
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) throw new Error(error.message);
     return data as FamilyConnection;
   }
 
@@ -80,7 +82,7 @@ export async function createInvite(
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return data as FamilyConnection;
 }
 
@@ -93,7 +95,7 @@ export async function getActiveConnection(userId: string): Promise<FamilyConnect
     .neq('invitation_status', 'revoked')
     .maybeSingle();
 
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return data as FamilyConnection | null;
 }
 
@@ -109,7 +111,7 @@ export async function revokeAccess(connectionId: string): Promise<void> {
     })
     .eq('id', connectionId);
 
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 }
 
 /** Aceita convite pelo código de 6 dígitos */
@@ -145,7 +147,7 @@ export async function acceptInvite(
     })
     .eq('id', conn.id);
 
-  if (updateError) throw updateError;
+  if (updateError) throw new Error(updateError.message);
   return { ok: true };
 }
 
