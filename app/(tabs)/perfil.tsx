@@ -40,6 +40,9 @@ export default function PerfilScreen() {
   const { profile: storeProfile, setProfile: setStoreProfile } = useProfileStore();
   const { setSession } = useAuthStore();
   const plan = usePlanStore((s) => s.plan);
+  const trialEnd = usePlanStore((s) => s.trialEnd);
+  const isInTrial = trialEnd !== null && new Date(trialEnd) > new Date();
+  const effectivePlan = isInTrial ? 'guardian' : plan;
   const [profile, setProfile] = useState<Profile | null>(storeProfile);
   const [loading, setLoading] = useState(!storeProfile);
   const [signOutLoading, setSignOutLoading] = useState(false);
@@ -138,16 +141,20 @@ export default function PerfilScreen() {
   };
 
   const handleDeleteAccount = () => {
+    // Alert.alert on web delegates to window.confirm(), which browsers block inside
+    // async React handlers — use window.confirm() directly on web (same pattern as handleSignOut).
+    if (Platform.OS === 'web') {
+      if (window.confirm('Todos os seus dados serão apagados permanentemente. Esta ação não pode ser desfeita.')) {
+        confirmDelete();
+      }
+      return;
+    }
     Alert.alert(
       'Excluir conta e dados',
       'Todos os seus dados serão apagados permanentemente. Esta ação não pode ser desfeita.',
       [
         { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Excluir tudo',
-          style: 'destructive',
-          onPress: confirmDelete,
-        },
+        { text: 'Excluir tudo', style: 'destructive', onPress: confirmDelete },
       ],
     );
   };
@@ -171,7 +178,12 @@ export default function PerfilScreen() {
         throw new Error(body.error ?? 'Erro ao excluir conta');
       }
 
+      // Clear stores explicitly before signOut to avoid stale state if the
+      // onAuthStateChange listener in _layout fires late.
+      setStoreProfile(null);
+      setSession(null);
       await supabase.auth.signOut();
+      router.replace('/(auth)/welcome');
     } catch (err) {
       setDeleteLoading(false);
       Alert.alert('Erro', err instanceof Error ? err.message : 'Tente novamente.');
@@ -313,10 +325,10 @@ export default function PerfilScreen() {
         <Pressable
           onPress={() => router.push('/programa30')}
           style={{
-            backgroundColor: plan === 'guardian' ? `${Colors.gold}11` : Colors.surface,
+            backgroundColor: effectivePlan === 'guardian' ? `${Colors.gold}11` : Colors.surface,
             borderRadius: 16,
             borderWidth: 1,
-            borderColor: plan === 'guardian' ? Colors.gold : Colors.border,
+            borderColor: effectivePlan === 'guardian' ? Colors.gold : Colors.border,
             padding: 16,
             flexDirection: 'row',
             justifyContent: 'space-between',
@@ -325,14 +337,14 @@ export default function PerfilScreen() {
           }}
         >
           <View>
-            <Text style={{ color: plan === 'guardian' ? Colors.gold : Colors.muted, fontWeight: '600', fontSize: 15 }}>
+            <Text style={{ color: effectivePlan === 'guardian' ? Colors.gold : Colors.muted, fontWeight: '600', fontSize: 15 }}>
               Programa 30 Dias
             </Text>
             <Text style={{ color: Colors.muted, fontSize: 12, marginTop: 2 }}>
-              {plan === 'guardian' ? 'Conteúdo progressivo com certificado' : 'Plano Guardião'}
+              {effectivePlan === 'guardian' ? 'Conteúdo progressivo com certificado' : 'Plano Guardião'}
             </Text>
           </View>
-          <Text style={{ color: plan === 'guardian' ? Colors.gold : Colors.muted, fontSize: 18 }}>→</Text>
+          <Text style={{ color: effectivePlan === 'guardian' ? Colors.gold : Colors.muted, fontSize: 18 }}>→</Text>
         </Pressable>
 
         {/* Configurações */}
@@ -361,6 +373,44 @@ export default function PerfilScreen() {
               borderTop
             />
           )}
+        </View>
+
+        {/* Links adicionais */}
+        <SectionTitle>Mais</SectionTitle>
+        <View
+          style={{
+            backgroundColor: Colors.surface,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            marginBottom: 24,
+            overflow: 'hidden',
+          }}
+        >
+          {[
+            { label: 'Diário de reflexões', route: '/diario' },
+            { label: 'Histórico do checklist', route: '/historico' },
+            { label: 'Ver planos', route: '/(tabs)/plans' },
+            { label: 'Privacidade', route: '/privacidade' },
+            { label: 'Sobre', route: '/sobre' },
+          ].map((item, i) => (
+            <Pressable
+              key={item.route}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              onPress={() => router.push(item.route as any)}
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: 16,
+                borderTopWidth: i > 0 ? 1 : 0,
+                borderTopColor: Colors.border,
+              }}
+            >
+              <Text style={{ color: Colors.text, fontSize: 15 }}>{item.label}</Text>
+              <Text style={{ color: Colors.muted, fontSize: 16 }}>→</Text>
+            </Pressable>
+          ))}
         </View>
 
         {/* Ações */}

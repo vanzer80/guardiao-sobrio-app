@@ -71,8 +71,17 @@ export default function PlansScreen() {
         'Você tem 5 dias com acesso completo ao Guardião. Explore à vontade.',
         [{ text: 'Ok' }],
       );
-    } catch {
-      Alert.alert('Erro', 'Não foi possível ativar o teste. Tente novamente.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('trial_already_used')) {
+        Alert.alert(
+          'Teste já utilizado',
+          'Você já usou seu período de teste gratuito. Escolha um plano para continuar.',
+          [{ text: 'Fechar', style: 'cancel' }],
+        );
+      } else {
+        Alert.alert('Erro', 'Não foi possível ativar o teste. Tente novamente.');
+      }
     } finally {
       setIsActivatingTrial(false);
     }

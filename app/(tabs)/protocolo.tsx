@@ -12,8 +12,9 @@ import { useEffect, useState, useCallback } from 'react';
 import { Colors } from '@/constants/Colors';
 import { supabase } from '@/lib/supabase';
 import { countSosThisMonth, saveSosActivation, FREE_MONTHLY_LIMIT } from '@/lib/protocolo';
+import { usePlanStore } from '@/hooks/usePlanStore';
 
-type Step = 'idle' | 'pare' | 'respire' | 'contato' | 'movimento' | 'estrutura';
+type Step = 'idle' | 'pare' | 'respire' | 'contato' | 'movimento' | 'estrutura' | 'concluido';
 
 const BREATH_PHASES = [
   { label: 'INSPIRE', secs: 4, toValue: 1 },
@@ -28,6 +29,10 @@ export default function ProtocoloScreen() {
   const [usageCount, setUsageCount] = useState<number | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [cravingLevel, setCravingLevel] = useState(5);
+  const plan = usePlanStore((s) => s.plan);
+  const trialEnd = usePlanStore((s) => s.trialEnd);
+  const isInTrial = trialEnd !== null && new Date(trialEnd) > new Date();
+  const isFreeUser = !isInTrial && plan === 'free';
 
   // Breathing state
   const [breathPhase, setBreathPhase] = useState(0);
@@ -138,13 +143,18 @@ export default function ProtocoloScreen() {
             Para momentos de crise, fissura intensa ou recaída iminente.
           </Text>
 
-          {overLimit && (
-            <View style={styles.limitBox}>
-              <Text style={{ color: Colors.emergency, fontWeight: '600', fontSize: 13 }}>
-                Você usou {usageCount}/{FREE_MONTHLY_LIMIT} protocolos gratuitos este mês.
+          {isFreeUser && usageCount !== null && (
+            <View style={[
+              styles.limitBox,
+              !overLimit && { borderColor: Colors.border, backgroundColor: Colors.surface },
+            ]}>
+              <Text style={{ color: overLimit ? Colors.emergency : Colors.muted, fontWeight: '600', fontSize: 13 }}>
+                {usageCount}/{FREE_MONTHLY_LIMIT} usos este mês
               </Text>
               <Text style={{ color: Colors.muted, fontSize: 12, marginTop: 4, textAlign: 'center' }}>
-                O protocolo jamais é bloqueado durante uma crise.
+                {overLimit
+                  ? 'O protocolo jamais é bloqueado durante uma crise.'
+                  : 'Plano Essential e Guardião têm usos ilimitados.'}
               </Text>
             </View>
           )}
@@ -405,10 +415,46 @@ export default function ProtocoloScreen() {
             Este app não substitui psiquiatra, psicólogo ou grupos de apoio.
           </Text>
 
-          <Pressable style={[styles.nextButton, { marginTop: 8 }]} onPress={reset}>
+          <Pressable style={[styles.nextButton, { marginTop: 8 }]} onPress={() => setStep('concluido')}>
             <Text style={styles.nextButtonText}>Protocolo concluído</Text>
           </Pressable>
         </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  // ── CONCLUÍDO ───────────────────────────────────────────────────────────────
+  if (step === 'concluido') {
+    return (
+      <SafeAreaView style={[styles.fullCenter, { backgroundColor: Colors.bg }]}>
+        <Text style={{ fontSize: 48, textAlign: 'center', marginBottom: 16, color: Colors.gold }}>✦</Text>
+        <Text style={[styles.bigWord, { color: Colors.gold, fontSize: 40, marginBottom: 8 }]}>
+          Protocolo{'\n'}Concluído
+        </Text>
+        <Text
+          style={{
+            color: Colors.mutedLight,
+            fontSize: 18,
+            textAlign: 'center',
+            marginTop: 12,
+            lineHeight: 28,
+            fontFamily: 'CormorantGaramond-Italic',
+            paddingHorizontal: 16,
+          }}
+        >
+          Você atravessou este momento.{'\n'}
+          Cada vez que usa o protocolo,{'\n'}
+          você fortalece quem está se tornando.
+        </Text>
+        <Pressable
+          style={[styles.nextButton, { marginTop: 40, paddingHorizontal: 32 }]}
+          onPress={reset}
+        >
+          <Text style={styles.nextButtonText}>Voltar ao início</Text>
+        </Pressable>
+        <Text style={styles.disclaimer}>
+          Este app não substitui psiquiatra, psicólogo ou grupos de apoio.
+        </Text>
       </SafeAreaView>
     );
   }

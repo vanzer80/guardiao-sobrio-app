@@ -49,11 +49,15 @@ export default function MetodoScreen() {
   const router = useRouter();
   const { profile } = useProfileStore();
   const plan = usePlanStore((s) => s.plan);
+  const trialEnd = usePlanStore((s) => s.trialEnd);
+  const isInTrial = trialEnd !== null && new Date(trialEnd) > new Date();
+  const effectivePlan = isInTrial ? 'guardian' : plan;
   const days = daysSince(profile?.sobriety_start_date ?? null) ?? 0;
   const pilarHoje = getPilarHoje();
   const pilarMeta = PILAR_META[pilarHoje];
   const fundamentoHoje = getFundamentoDodia(days);
-  const isPremium = plan !== 'free';
+  const isPremium = effectivePlan !== 'free';
+  const isProg30 = effectivePlan === 'guardian';
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [aplicados, setAplicados] = useState<Set<number>>(new Set());
 
@@ -172,7 +176,10 @@ export default function MetodoScreen() {
                 aplicado={aplicados.has(f.id)}
                 locked={locked}
                 onToggleExpand={() => {
-                  if (locked) return;
+                  if (locked) {
+                    router.push('/(tabs)/plans');
+                    return;
+                  }
                   setExpandedId(expandedId === f.id ? null : f.id);
                 }}
                 onToggleAplicado={() => toggleAplicado(f.id)}
@@ -203,10 +210,10 @@ export default function MetodoScreen() {
           onPress={() => router.push('/programa30')}
           style={{
             marginTop: 32,
-            backgroundColor: plan === 'guardian' ? `${Colors.gold}11` : Colors.surface,
+            backgroundColor: isProg30 ? `${Colors.gold}11` : Colors.surface,
             borderRadius: 16,
             borderWidth: 1,
-            borderColor: plan === 'guardian' ? Colors.gold : Colors.border,
+            borderColor: isProg30 ? Colors.gold : Colors.border,
             padding: 18,
             flexDirection: 'row',
             justifyContent: 'space-between',
@@ -214,16 +221,16 @@ export default function MetodoScreen() {
           }}
         >
           <View>
-            <Text style={{ color: plan === 'guardian' ? Colors.gold : Colors.muted, fontWeight: '700', fontSize: 15 }}>
+            <Text style={{ color: isProg30 ? Colors.gold : Colors.muted, fontWeight: '700', fontSize: 15 }}>
               Programa 30 Dias
             </Text>
             <Text style={{ color: Colors.muted, fontSize: 12, marginTop: 4 }}>
-              {plan === 'guardian'
+              {isProg30
                 ? '1 fundamento + prática + reflexão por dia'
                 : 'Exclusivo do plano Guardião'}
             </Text>
           </View>
-          <Text style={{ color: plan === 'guardian' ? Colors.gold : Colors.muted, fontSize: 18 }}>→</Text>
+          <Text style={{ color: isProg30 ? Colors.gold : Colors.muted, fontSize: 18 }}>→</Text>
         </Pressable>
 
         <Text style={{ color: Colors.muted, fontSize: 12, textAlign: 'center', marginTop: 40, fontStyle: 'italic' }}>
