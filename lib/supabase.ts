@@ -31,7 +31,10 @@ function buildClient() {
       storage: buildAuthStorage(),
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: Platform.OS === 'web',
+      // false: a rota app/(auth)/callback.tsx troca o code explicitamente.
+      // Se true, o Supabase compete com o callback e pode consumir o code
+      // verifier antes dele, causando falha silenciosa.
+      detectSessionInUrl: false,
     },
   });
 }
