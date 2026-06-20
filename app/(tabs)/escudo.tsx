@@ -13,6 +13,7 @@ import {
   ScrollView,
   Pressable,
   Alert,
+  Platform,
   TextInput,
   Modal,
   ActivityIndicator,
@@ -35,6 +36,14 @@ import {
   type FamilyConnection,
 } from '@/lib/family';
 import { useRouter } from 'expo-router';
+
+function showAlert(title: string, message: string) {
+  if (Platform.OS === 'web') {
+    window.alert(`${title}\n\n${message}`);
+  } else {
+    Alert.alert(title, message);
+  }
+}
 
 // ── Paywall banner ──────────────────────────────────────────────────────────
 
@@ -77,7 +86,7 @@ function TriggerFormModal({
 
   const handleSave = async () => {
     if (!title.trim()) {
-      Alert.alert('Campo obrigatório', 'Dê um nome ao gatilho.');
+      showAlert('Campo obrigatório', 'Dê um nome ao gatilho.');
       return;
     }
     try {
@@ -100,7 +109,7 @@ function TriggerFormModal({
       reset();
       onClose();
     } catch {
-      Alert.alert('Erro', 'Não foi possível salvar o gatilho.');
+      showAlert('Erro', 'Não foi possível salvar o gatilho.');
     } finally {
       setSaving(false);
     }
@@ -197,6 +206,10 @@ function TriggerCard({ trigger, onDelete }: { trigger: UserTrigger; onDelete: (i
   const color = RISK_COLORS[trigger.risk_level] ?? Colors.muted;
 
   const confirmDelete = () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Remover "${trigger.title}"?`)) onDelete(trigger.id);
+      return;
+    }
     Alert.alert('Remover gatilho', `Remover "${trigger.title}"?`, [
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Remover', style: 'destructive', onPress: () => onDelete(trigger.id) },
@@ -260,7 +273,7 @@ function FamiliarSection({ userId }: { userId: string }) {
 
   const handleInvite = async () => {
     if (!inviteName.trim()) {
-      Alert.alert('Campo obrigatório', 'Informe o nome do familiar.');
+      showAlert('Campo obrigatório', 'Informe o nome do familiar.');
       return;
     }
     try {
@@ -269,8 +282,8 @@ function FamiliarSection({ userId }: { userId: string }) {
       setConn(c);
       setShowInviteForm(false);
       setInviteName('');
-    } catch {
-      Alert.alert('Erro', 'Não foi possível gerar o convite.');
+    } catch (err) {
+      showAlert('Erro', err instanceof Error ? err.message : 'Não foi possível gerar o convite.');
     } finally {
       setInviting(false);
     }
@@ -278,23 +291,24 @@ function FamiliarSection({ userId }: { userId: string }) {
 
   const handleRevoke = () => {
     if (!conn) return;
+    const doRevoke = async () => {
+      try {
+        await revokeAccess(conn.id);
+        setConn(null);
+      } catch {
+        showAlert('Erro', 'Não foi possível revogar o acesso.');
+      }
+    };
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Remover acesso de ${conn.family_name}? Essa ação é imediata.`)) doRevoke();
+      return;
+    }
     Alert.alert(
       'Revogar acesso',
       `Remover acesso de ${conn.family_name}? Essa ação é imediata.`,
       [
         { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Revogar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await revokeAccess(conn.id);
-              setConn(null);
-            } catch {
-              Alert.alert('Erro', 'Não foi possível revogar o acesso.');
-            }
-          },
-        },
+        { text: 'Revogar', style: 'destructive', onPress: doRevoke },
       ]
     );
   };
@@ -440,7 +454,7 @@ export default function EscudoScreen() {
       await deleteTrigger(id);
       setTriggers((prev) => prev.filter((t) => t.id !== id));
     } catch {
-      Alert.alert('Erro', 'Não foi possível remover o gatilho.');
+      showAlert('Erro', 'Não foi possível remover o gatilho.');
     }
   };
 
