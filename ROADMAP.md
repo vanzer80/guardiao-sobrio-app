@@ -339,6 +339,28 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 - [ ] Apple OAuth: Service ID + private key da Apple Developer Account
 - [ ] Redirect URL `guardiaosobrio:///` adicionada em Authentication → URL Configuration
 
+### Sprint 11 — Modo Visitante (Acesso Sem Cadastro) ✅ CONCLUÍDO (20/06/2026)
+
+- [x] **`signInAnonymously()`** — sessão real no Supabase (`is_anonymous = true`), user_id UUID preservado na conversão
+- [x] **Acesso completo por 5 dias** — `getEffectivePlan()` retorna `'guardian'` para anônimos; sem bloqueio de nenhuma feature
+- [x] **Fluxo de entrada** — botão "Explorar sem cadastro" em `welcome.tsx`; param `mode=guest` encadeado pelo onboarding (motivo → tempo → desafio); `signInAsGuest()` em `lib/anonymousAuth.ts`
+- [x] **`AnonymousBanner`** — countdown de dias restantes, oculto na tela de protocolo SOS em qualquer circunstância
+- [x] **`convert.tsx`** — `updateUser({ email, password })` preserva 100% dos dados (mesmo `user_id`); `linkIdentity()` para Google/Apple; disclaimer obrigatório + CVV/CAPS
+- [x] **Modal de expiração** — `AnonymousExpiredModal` após 5 dias; degrada para free (nunca deleta dados); nunca aparece sobre o protocolo SOS
+- [x] **Migration `20260620140000`** — colunas `is_anonymous` + `anonymous_created_at` em `profiles`, índice de cleanup aplicado em produção
+- [x] **Edge Function `cleanup-anonymous-users`** — deleta perfis anônimos > 7 dias sem conversão; contagem de erros por item; deployada com `--no-verify-jwt`
+- [x] **Cron job `0 3 * * *`** — pg_cron + pg_net habilitados; cleanup automático diário às 3h UTC
+- [x] **Anonymous Sign-ins habilitado** no Supabase Auth (`external_anonymous_users_enabled: true`) via Management API
+- [x] **Auditoria RLS** — `emergency_contacts`: policy `owner_all_emergency_contacts` (PERMISSIVE, ALL) permite acesso SOS para anônimos ✅ — `family_connections`: policy `Anônimos não podem criar conexões de família` é **RESTRICTIVE** (AND-ado com permissivas), bloqueio de INSERT confirmado ✅
+- **DoD:** ✅ typecheck verde · ✅ lint verde · ✅ hard rules auditadas · ✅ banner oculto no SOS · ✅ RLS auditado · ✅ migration + Edge Function + cron em produção
+
+**Pendente de QA em device físico (antes do merge final):**
+- [ ] Testar `linkIdentity` Google e Apple em iOS/Android físico
+- [ ] Verificar que banner some imediatamente após conversão bem-sucedida
+- [ ] Confirmar que push token não é registrado para usuário anônimo
+
+---
+
 ### Sprint 10 — Auth Bugfixes ✅ CONCLUÍDO (20/06/2026)
 
 - [x] **OAuth callback (web):** `useLocalSearchParams` retornava `code=undefined` no primeiro render de hidratação; guard agora aguarda o re-render com o valor real (`if (code === undefined) return`) em vez de redirecionar imediatamente para `/login`; ref `attempted` previne dupla troca; timeout de 10s como fallback — `app/(auth)/callback.tsx`

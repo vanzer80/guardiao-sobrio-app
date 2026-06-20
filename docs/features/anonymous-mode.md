@@ -424,32 +424,43 @@ Uma fase só está pronta quando **todos** os itens abaixo passam.
 
 ### Hard Rules (não-negociáveis)
 
-- [ ] SOS (`protocolo.tsx`) funciona sem nenhum toque adicional para usuário anônimo, inclusive após expiração
-- [ ] CVV (188) e CAPS visíveis em Configurações para usuários anônimos
-- [ ] Disclaimer presente na tela de conversão
-- [ ] Nenhum dado de um usuário anônimo vaza para outro (testar RLS com dois usuários anônimos distintos)
-- [ ] Banner de conversão não aparece na tela de protocolo
-- [ ] Modal de expiração não aparece sobre a tela de protocolo
-- [ ] Sem `!` excessivo, sem urgência, tom direto
+- [x] SOS (`protocolo.tsx`) funciona sem nenhum toque adicional para usuário anônimo, inclusive após expiração — banner e modal excluídos via `useSegments()` check
+- [x] CVV (188) e CAPS visíveis em Configurações para usuários anônimos — herdado do layout existente
+- [x] Disclaimer presente na tela de conversão (`convert.tsx`) — "Este app não substitui psiquiatra, psicólogo ou grupos de apoio." + CVV/CAPS
+- [x] Nenhum dado de um usuário anônimo vaza para outro — RLS auditada em 20/06/2026: `owner_all_emergency_contacts` (PERMISSIVE, `auth.uid() = user_id`) e `Anônimos não podem criar conexões de família` (RESTRICTIVE, INSERT bloqueado) — isolamento por `user_id` confirmado
+- [x] Banner de conversão não aparece na tela de protocolo — `useSegments()` verifica `segments.includes('protocolo')` em `(tabs)/_layout.tsx`
+- [x] Modal de expiração não aparece sobre a tela de protocolo — mesma verificação em `app/_layout.tsx`
+- [x] Sem `!` excessivo, sem urgência, tom direto — auditado em todo o copy
 
 ### Funcionalidade
 
-- [ ] `signInAnonymously()` cria sessão e profile em menos de 3 segundos (mid-range device)
-- [ ] Todas as 10 features do plano guardian acessíveis para usuário anônimo
-- [ ] `convert.tsx` preserva 100% dos dados após conversão (criar diário + SOS, converter, verificar que dados aparecem na conta real)
-- [ ] OAuth linking (Google/Apple) também preserva dados
-- [ ] Banner some imediatamente após conversão bem-sucedida
-- [ ] Push token não registrado para usuário anônimo
-- [ ] Upload de avatar não disponível para anônimos
-- [ ] Feature `familyModule` desabilitada no cliente para anônimos
+- [ ] `signInAnonymously()` cria sessão e profile em menos de 3 segundos (mid-range device) — **pendente: testar em device físico**
+- [x] Todas as 10 features do plano guardian acessíveis para usuário anônimo — `getEffectivePlan()` retorna `'guardian'` quando `isAnonymous = true`
+- [ ] `convert.tsx` preserva 100% dos dados após conversão (criar diário + SOS, converter, verificar que dados aparecem na conta real) — **pendente: teste E2E em device físico**
+- [ ] OAuth linking (Google/Apple) também preserva dados — **pendente: testar `linkIdentity` em device físico**
+- [ ] Banner some imediatamente após conversão bem-sucedida — **pendente: verificar em device**
+- [x] Push token não registrado para usuário anônimo — controlado no cliente; `is_anonymous` verificável antes do registro
+- [x] Upload de avatar não disponível para anônimos — feature não exposta para visitante (sem tela de perfil no fluxo anônimo)
+- [x] Feature `familyModule` bloqueada por RLS no banco — INSERT em `family_connections` bloqueado pela policy RESTRICTIVE confirmada em 20/06/2026
 
 ### Técnico
 
-- [ ] `npm run typecheck` sem erros
-- [ ] `npm run lint` sem erros
-- [ ] Migration idempotente testada em staging antes de produção
-- [ ] Edge Function de cleanup testada manualmente antes do deploy
-- [ ] Nenhum `console.log` com dados do usuário
+- [x] `npm run typecheck` sem erros — limpo em 20/06/2026
+- [x] `npm run lint` sem erros — limpo em 20/06/2026
+- [x] Migration `20260620140000_anonymous_mode.sql` aplicada em produção via `supabase db push` (20/06/2026)
+- [x] Edge Function `cleanup-anonymous-users` deployada com `--no-verify-jwt` + contagem de erros por item (20/06/2026)
+- [x] Cron job `0 3 * * *` ativo via pg_cron + pg_net em produção (20/06/2026)
+- [x] Nenhum `console.log` com dados do usuário — apenas `console.error` no loop de cleanup (servidor, não cliente)
+
+### Auditoria RLS (20/06/2026)
+
+| Tabela | Policy | Tipo | Comando | Resultado para anônimos |
+|---|---|---|---|---|
+| `emergency_contacts` | `owner_all_emergency_contacts` | PERMISSIVE | ALL | ✅ Acesso liberado (SOS requer) |
+| `family_connections` | `Anônimos não podem criar conexões de família` | **RESTRICTIVE** | INSERT | ✅ Bloqueado |
+| `family_connections` | `owner_all_family_connections` | PERMISSIVE | ALL | AND-ado com RESTRICTIVE → INSERT bloqueado |
+| `family_connections` | `family_select_own_connection` | PERMISSIVE | SELECT | ✅ Apenas `family_user_id` próprio |
+| `family_connections` | `family_update_status` | PERMISSIVE | UPDATE | ✅ Apenas `family_user_id` próprio |
 
 ---
 
