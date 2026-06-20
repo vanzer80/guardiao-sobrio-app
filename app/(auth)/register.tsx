@@ -116,14 +116,28 @@ export default function RegisterScreen() {
     }
   };
 
-  // OAuth via Supabase + expo-web-browser (PKCE flow)
-  // Pré-requisito: Google e Apple habilitados no Supabase Dashboard →
-  // Authentication → Providers. URL de redirect: guardiaosobrio:///
+  // Web: redireciona o navegador para o provider OAuth; ao voltar, /callback troca o code.
+  // Native: PKCE via expo-web-browser. Salva contexto de onboarding após troca de código.
   const handleOAuth = async (provider: 'google' | 'apple') => {
     setOauthLoading(provider);
     try {
-      const redirectUrl = Linking.createURL('/');
+      if (Platform.OS === 'web') {
+        const redirectTo = `${window.location.origin}/callback`;
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: { redirectTo },
+        });
+        if (error) {
+          console.error('[OAuth web]', provider, error.message);
+          throw error;
+        }
+        // Navegador redirecionando — contexto de onboarding não persiste no web
+        // (MMKV é nativo); novo usuário irá para setup sem pré-preenchimento.
+        return;
+      }
 
+      // Native: PKCE com expo-web-browser + salva contexto de onboarding.
+      const redirectUrl = Linking.createURL('/');
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
@@ -131,13 +145,9 @@ export default function RegisterScreen() {
           skipBrowserRedirect: true,
         },
       });
-
       if (error || !data.url) {
-        Alert.alert(
-          'Erro',
-          'Não foi possível iniciar o login social. Verifique se o provedor está configurado.',
-        );
-        return;
+        console.error('[OAuth native]', provider, error?.message ?? 'sem URL');
+        throw error ?? new Error('Provider não configurado. Tente novamente.');
       }
 
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
@@ -145,22 +155,22 @@ export default function RegisterScreen() {
       if (result.type === 'success') {
         const url = new URL(result.url);
         const code = url.searchParams.get('code');
-
         if (code) {
           const { data: authData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
           if (exchangeError) {
-            Alert.alert('Erro de autenticação', exchangeError.message);
+            console.error('[OAuth native exchange]', exchangeError.message);
+            throw exchangeError;
           } else if (authData.session) {
             await saveOnboardingContext(authData.session.user.id, motivo, tempo, desafio);
           }
-          // onAuthStateChange em _layout.tsx detecta a sessão e redireciona
+          // onAuthStateChange em _layout.tsx detecta a sessão e redireciona.
         } else {
-          // Fluxo implícito (sem PKCE): force refresh de sessão
           await supabase.auth.getSession();
         }
       }
-    } catch {
-      Alert.alert('Erro', 'Não foi possível completar o login.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Não foi possível completar o login.';
+      Alert.alert('Erro ao autenticar', msg);
     } finally {
       setOauthLoading(null);
     }
