@@ -17,10 +17,17 @@ Deno.serve(async () => {
   if (error) return new Response(`error: ${error.message}`, { status: 500 })
   if (!expired?.length) return new Response('noop')
 
+  let deleted = 0
+  let failed = 0
   for (const { id } of expired) {
-    // Cascata via FK apaga profiles e dados associados
-    await supabase.auth.admin.deleteUser(id)
+    const { error: deleteError } = await supabase.auth.admin.deleteUser(id)
+    if (deleteError) {
+      console.error(`failed to delete user ${id}:`, deleteError.message)
+      failed++
+    } else {
+      deleted++
+    }
   }
 
-  return new Response(`deleted ${expired.length} anonymous users`)
+  return new Response(`deleted ${deleted} anonymous users, failed ${failed}`)
 })
