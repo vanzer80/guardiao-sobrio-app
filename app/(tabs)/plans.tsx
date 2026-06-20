@@ -3,7 +3,7 @@
  * Feature unlock based on subscription tier
  */
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Alert, Linking } from 'react-native';
 import { usePlanStore } from '@/hooks/usePlanStore';
 import { useAuthStore } from '@/hooks/useAuthStore';
@@ -13,7 +13,18 @@ import { PlanType } from '@/lib/types.monetization';
 
 export default function PlansScreen() {
   const session = useAuthStore((state) => state.session);
-  const { plan, isLoading, error, setLoading, setError } = usePlanStore();
+  const {
+    plan,
+    isLoading,
+    error,
+    trialEnd,
+    trialActivatedAt,
+    activateTrial,
+    setLoading,
+    setError,
+  } = usePlanStore();
+
+  const [isActivatingTrial, setIsActivatingTrial] = useState(false);
 
   const handleSelectPlan = useCallback(async (selectedPlan: PlanType) => {
     if (selectedPlan === 'free') return;
@@ -37,8 +48,6 @@ export default function PlansScreen() {
         throw new Error('URL de checkout não retornada');
       }
 
-      // Abre Stripe Checkout no navegador externo
-      // O retorno ocorre via deep link (guardiao://plans/success)
       const canOpen = await Linking.canOpenURL(url);
       if (!canOpen) {
         throw new Error('Não foi possível abrir o checkout');
@@ -53,11 +62,31 @@ export default function PlansScreen() {
     }
   }, [session, error, setLoading, setError]);
 
+  const handleActivateTrial = useCallback(async () => {
+    try {
+      setIsActivatingTrial(true);
+      await activateTrial();
+      Alert.alert(
+        'Teste ativado',
+        'Você tem 5 dias com acesso completo ao Guardião. Explore à vontade.',
+        [{ text: 'Ok' }],
+      );
+    } catch {
+      Alert.alert('Erro', 'Não foi possível ativar o teste. Tente novamente.');
+    } finally {
+      setIsActivatingTrial(false);
+    }
+  }, [activateTrial]);
+
   return (
     <PlansComparison
       currentPlan={plan as PlanType}
       onSelectPlan={handleSelectPlan}
       isLoading={isLoading}
+      trialEnd={trialEnd}
+      trialActivatedAt={trialActivatedAt}
+      onActivateTrial={handleActivateTrial}
+      isActivatingTrial={isActivatingTrial}
     />
   );
 }

@@ -132,14 +132,14 @@ export default function StatsScreen() {
   const router = useRouter();
   const userId = useAuthStore((s) => s.session?.user?.id ?? '');
   const { profile } = useProfileStore();
-  const plan = usePlanStore((s) => s.plan);
+  const canAccessFeature = usePlanStore((s) => s.canAccessFeature);
 
   const [stats, setStats] = useState<OverallStats | null>(null);
   const [grid, setGrid] = useState<DayStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
 
-  const canAccess = plan === 'essential' || plan === 'guardian';
+  const canAccess = canAccessFeature('statistics');
 
   useEffect(() => {
     if (!userId || !canAccess) return;

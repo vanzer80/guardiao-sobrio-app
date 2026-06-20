@@ -409,14 +409,14 @@ function FamiliarSection({ userId }: { userId: string }) {
 // ── Main screen ───────────────────────────────────────────────────────────────
 
 export default function EscudoScreen() {
-  const plan = usePlanStore((s) => s.plan);
+  const canAccessFeature = usePlanStore((s) => s.canAccessFeature);
   const userId = useAuthStore((s) => s.session?.user?.id ?? '');
   const [triggers, setTriggers] = useState<UserTrigger[]>([]);
   const [loadingTriggers, setLoadingTriggers] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
-  const canAccessTriggers = plan === 'essential' || plan === 'guardian';
-  const canAccessFamily = plan === 'guardian';
+  const canAccessTriggers = canAccessFeature('triggerMap');
+  const canAccessFamily = canAccessFeature('familyModule');
 
   useEffect(() => {
     if (!userId || !canAccessTriggers) return;

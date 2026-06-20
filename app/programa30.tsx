@@ -305,12 +305,12 @@ function Certificado({ nome }: { nome: string }) {
 export default function Programa30Screen() {
   const router = useRouter();
   const userId = useAuthStore((s) => s.session?.user?.id ?? '');
-  const plan = usePlanStore((s) => s.plan);
+  const canAccessFeature = usePlanStore((s) => s.canAccessFeature);
   const [diasCompletos, setDiasCompletos] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [selectedDia, setSelectedDia] = useState<DiaPrograma | null>(null);
 
-  const canAccess = plan === 'guardian';
+  const canAccess = canAccessFeature('program30Days');
   const dias = getDiasPrograma();
   const progresso = calcularProgresso(diasCompletos);
 

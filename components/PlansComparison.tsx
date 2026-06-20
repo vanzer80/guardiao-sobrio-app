@@ -5,14 +5,148 @@
  * Copy focuses on protection and structure, not outcomes.
  */
 
-import { View, Text, ScrollView, SafeAreaView, Pressable } from 'react-native';
+import { View, Text, ScrollView, SafeAreaView, Pressable, ActivityIndicator } from 'react-native';
 import { PLAN_FEATURES, PRICING, PlanType } from '@/lib/types.monetization';
 import { Colors } from '@/constants/Colors';
+
+function trialDaysRemaining(trialEnd: string): number {
+  return Math.max(0, Math.ceil((new Date(trialEnd).getTime() - Date.now()) / 86_400_000));
+}
+
+function TrialBanner({
+  trialEnd,
+  trialActivatedAt,
+  onActivateTrial,
+  isActivatingTrial,
+}: {
+  trialEnd?: string | null;
+  trialActivatedAt?: string | null;
+  onActivateTrial?: () => Promise<void>;
+  isActivatingTrial?: boolean;
+}) {
+  const isActive = !!trialEnd && new Date(trialEnd) > new Date();
+  const wasUsed = !!trialActivatedAt && !isActive;
+  const canActivate = !trialActivatedAt;
+
+  if (isActive) {
+    const days = trialDaysRemaining(trialEnd!);
+    return (
+      <View
+        style={{
+          backgroundColor: `${Colors.gold}15`,
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: `${Colors.gold}55`,
+          padding: 16,
+          marginBottom: 20,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+        }}
+      >
+        <Text style={{ color: Colors.gold, fontSize: 20 }}>✦</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: Colors.gold, fontWeight: '700', fontSize: 13 }}>
+            Período de teste ativo
+          </Text>
+          <Text style={{ color: Colors.muted, fontSize: 12, marginTop: 2 }}>
+            {days === 1 ? 'Último dia' : `${days} dias restantes`} — acesso completo ao Guardião.
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (wasUsed) {
+    return (
+      <View
+        style={{
+          backgroundColor: Colors.surface,
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: Colors.border,
+          padding: 14,
+          marginBottom: 20,
+        }}
+      >
+        <Text style={{ color: Colors.muted, fontSize: 12, textAlign: 'center' }}>
+          Você já utilizou o período de teste gratuito.
+        </Text>
+      </View>
+    );
+  }
+
+  if (canActivate) {
+    return (
+      <View
+        style={{
+          backgroundColor: `${Colors.gold}10`,
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: `${Colors.gold}40`,
+          padding: 18,
+          marginBottom: 20,
+          gap: 10,
+        }}
+      >
+        <Text
+          style={{
+            color: Colors.gold,
+            fontSize: 11,
+            letterSpacing: 2.5,
+          }}
+        >
+          OFERTA ÚNICA
+        </Text>
+        <Text
+          style={{
+            fontFamily: 'CormorantGaramond',
+            color: Colors.text,
+            fontSize: 22,
+            lineHeight: 28,
+          }}
+        >
+          5 dias grátis com tudo liberado
+        </Text>
+        <Text style={{ color: Colors.muted, fontSize: 13, lineHeight: 20 }}>
+          Explore todos os módulos do Guardião — sem cartão, sem compromisso.
+        </Text>
+        <Pressable
+          onPress={onActivateTrial}
+          disabled={isActivatingTrial}
+          accessibilityRole="button"
+          accessibilityLabel="Iniciar teste gratuito de 5 dias"
+          style={({ pressed }) => ({
+            backgroundColor: Colors.gold,
+            borderRadius: 10,
+            paddingVertical: 13,
+            alignItems: 'center',
+            opacity: isActivatingTrial || pressed ? 0.7 : 1,
+          })}
+        >
+          {isActivatingTrial ? (
+            <ActivityIndicator color={Colors.bg} />
+          ) : (
+            <Text style={{ color: Colors.bg, fontWeight: '700', fontSize: 15 }}>
+              Iniciar teste gratuito
+            </Text>
+          )}
+        </Pressable>
+      </View>
+    );
+  }
+
+  return null;
+}
 
 interface PlansComparisonProps {
   currentPlan?: PlanType;
   onSelectPlan?: (plan: PlanType) => void;
   isLoading?: boolean;
+  trialEnd?: string | null;
+  trialActivatedAt?: string | null;
+  onActivateTrial?: () => Promise<void>;
+  isActivatingTrial?: boolean;
 }
 
 const PLAN_LABELS: Record<PlanType, string> = {
@@ -46,6 +180,10 @@ export function PlansComparison({
   currentPlan = 'free',
   onSelectPlan,
   isLoading = false,
+  trialEnd,
+  trialActivatedAt,
+  onActivateTrial,
+  isActivatingTrial = false,
 }: PlansComparisonProps) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }}>
@@ -76,6 +214,16 @@ export function PlansComparison({
         <Text style={{ color: Colors.muted, fontSize: 14, marginBottom: 28 }}>
           Todos os planos têm acesso ao Protocolo de Emergência sem limites.
         </Text>
+
+        {/* Banner de trial — exibido apenas para usuários free */}
+        {currentPlan === 'free' && (
+          <TrialBanner
+            trialEnd={trialEnd}
+            trialActivatedAt={trialActivatedAt}
+            onActivateTrial={onActivateTrial}
+            isActivatingTrial={isActivatingTrial}
+          />
+        )}
 
         {/* Grid de planos */}
         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 28 }}>

@@ -1,4 +1,5 @@
 import { PLAN_FEATURES, PRICING, type PlanType } from '../lib/types.monetization';
+import { usePlanStore } from '../hooks/usePlanStore';
 
 const PLANS: PlanType[] = ['free', 'essential', 'guardian'];
 
@@ -88,5 +89,58 @@ describe('PRICING', () => {
   it('moeda é BRL', () => {
     expect(PRICING.essential.currency).toBe('BRL');
     expect(PRICING.guardian.currency).toBe('BRL');
+  });
+});
+
+describe('Trial (usePlanStore)', () => {
+  const future = new Date(Date.now() + 4 * 24 * 3600 * 1000).toISOString();
+  const past = new Date(Date.now() - 1000).toISOString();
+
+  beforeEach(() => {
+    usePlanStore.setState({ plan: 'free', trialEnd: null, trialActivatedAt: null });
+  });
+
+  it('isInTrial() retorna false quando trialEnd é null', () => {
+    expect(usePlanStore.getState().isInTrial()).toBe(false);
+  });
+
+  it('isInTrial() retorna true quando trialEnd é no futuro', () => {
+    usePlanStore.setState({ trialEnd: future });
+    expect(usePlanStore.getState().isInTrial()).toBe(true);
+  });
+
+  it('isInTrial() retorna false quando trialEnd está no passado', () => {
+    usePlanStore.setState({ trialEnd: past });
+    expect(usePlanStore.getState().isInTrial()).toBe(false);
+  });
+
+  it('getEffectivePlan() retorna guardian durante trial ativo', () => {
+    usePlanStore.setState({ trialEnd: future });
+    expect(usePlanStore.getState().getEffectivePlan()).toBe('guardian');
+  });
+
+  it('getEffectivePlan() retorna o plano real fora do trial', () => {
+    usePlanStore.setState({ trialEnd: null });
+    expect(usePlanStore.getState().getEffectivePlan()).toBe('free');
+  });
+
+  it('canAccessFeature(familyModule) retorna true durante trial (plano free)', () => {
+    usePlanStore.setState({ plan: 'free', trialEnd: future });
+    expect(usePlanStore.getState().canAccessFeature('familyModule')).toBe(true);
+  });
+
+  it('canAccessFeature(program30Days) retorna true durante trial (plano free)', () => {
+    usePlanStore.setState({ plan: 'free', trialEnd: future });
+    expect(usePlanStore.getState().canAccessFeature('program30Days')).toBe(true);
+  });
+
+  it('canAccessFeature(familyModule) retorna false após trial expirar', () => {
+    usePlanStore.setState({ plan: 'free', trialEnd: past, trialActivatedAt: past });
+    expect(usePlanStore.getState().canAccessFeature('familyModule')).toBe(false);
+  });
+
+  it('SOS (emergencyProtocol) acessível mesmo sem trial (hard rule)', () => {
+    usePlanStore.setState({ plan: 'free', trialEnd: null });
+    expect(usePlanStore.getState().canAccessFeature('emergencyProtocol')).toBe(true);
   });
 });

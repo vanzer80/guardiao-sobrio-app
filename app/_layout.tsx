@@ -78,6 +78,8 @@ export default function RootLayout() {
     setLoading: setProfileLoading,
   } = useProfileStore();
   const setPlan = usePlanStore((s) => s.setPlan);
+  const setTrialEnd = usePlanStore((s) => s.setTrialEnd);
+  const setTrialActivatedAt = usePlanStore((s) => s.setTrialActivatedAt);
   const router = useRouter();
   const segments = useSegments();
 
@@ -114,9 +116,11 @@ export default function RootLayout() {
       .then(({ data }) => {
         setProfile(data);
         if (data?.plan) setPlan(data.plan as PlanType);
+        setTrialEnd(data?.trial_end ?? null);
+        setTrialActivatedAt(data?.trial_activated_at ?? null);
         setProfileLoading(false);
       });
-  }, [userId, setProfile, setProfileLoading, setPlan]);
+  }, [userId, setProfile, setProfileLoading, setPlan, setTrialEnd, setTrialActivatedAt]);
 
   useEffect(() => {
     if (isLoading) return;

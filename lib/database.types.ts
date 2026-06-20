@@ -216,6 +216,8 @@ export type Database = {
           stripe_customer_id: string | null
           substance_focus: string | null
           timezone: string
+          trial_activated_at: string | null
+          trial_end: string | null
           updated_at: string
         }
         Insert: {
@@ -233,6 +235,8 @@ export type Database = {
           stripe_customer_id?: string | null
           substance_focus?: string | null
           timezone?: string
+          trial_activated_at?: string | null
+          trial_end?: string | null
           updated_at?: string
         }
         Update: {
@@ -250,6 +254,8 @@ export type Database = {
           stripe_customer_id?: string | null
           substance_focus?: string | null
           timezone?: string
+          trial_activated_at?: string | null
+          trial_end?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -555,7 +561,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      activate_trial: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
