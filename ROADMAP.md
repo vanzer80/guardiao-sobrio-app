@@ -289,6 +289,28 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 - [x] 68 testes unitários cobrindo toda a lógica de negócio do app (sobriety, protocolo, fundamentos, monetização, stripe, programa30dias)
 - **DoD:** ✅ typecheck verde · ✅ lint verde · ✅ 68/68 testes passando · ✅ hard rules auditadas
 
+### Sprint 8 — Design Polish ✅ CONCLUÍDO (19/06/2026)
+
+- [x] **Font loading corrigido** — CormorantGaramond e JetBrainsMono eram referenciados mas nunca carregados; adicionado `useFonts` no root layout com `@expo-google-fonts/cormorant-garamond` + `@expo-google-fonts/jetbrains-mono`; splash bloqueado até fontes carregarem
+- [x] **expo-linear-gradient** instalado (first-party Expo SDK); gradients nos cards do design
+- [x] **@expo/vector-icons** (Ionicons) instalado; ícones Ionicons em todas as tabs
+- [x] **Colors.ts** — tokens `mutedDark: '#524f4c'` e `mutedLight: '#a8a39c'` adicionados
+- [x] **Tela Hoje (index.tsx)** redesenhada conforme protótipo:
+  - Saudação + data no formato "QUARTA · 18 JUNHO" em JetBrains Mono
+  - Contador de dias: card horizontal com `LinearGradient`, círculo 96px com JetBrains Mono SemiBold 38px, ícone shield sobreposto, shadow real
+  - Âncora do Dia: card novo com fundo `rgba(gold,0.07)`, borda `rgba(gold,0.18)`, label JetBrains Mono 9px, frase em Cormorant Garamond Italic 22px
+  - Checklist: header com label JetBrains Mono + contador ouro `X/Y`, barra de progresso 4px
+- [x] **SOS (_layout.tsx)** redesenhado:
+  - Botão 58px com ícone shield (Ionicons) substituindo texto "SOS"
+  - Ring pulsante em loop (Animated.loop, 1.2s, `useNativeDriver: true`)
+  - Ícones Ionicons em todos os 4 tabs regulares (home, book, shield-outline, person)
+- [x] **Protocolo (protocolo.tsx)** com tipografia do protótipo:
+  - `bigWord`: General Sans system font 64px bold (removido CormorantGaramond das palavras de ação)
+  - `stepLabel`: JetBrains Mono 11px letter-spacing 3, cor emergency
+  - `stepInstruction`: Cormorant Garamond Italic 22px cor mutedLight
+  - `fieldLabel` (idle): JetBrains Mono 11px letter-spacing 2
+- **DoD:** ✅ typecheck verde · ✅ lint verde · ✅ 68/68 testes passando · ✅ hard rules auditadas · ✅ zero promessas de cura
+
 ### Pendentes
 - [ ] Comunidade O Escudo (feed curado, posts anônimos, moderação do criador) — DA4 aberta
 - [ ] Notificações de comunidade (opt-in)

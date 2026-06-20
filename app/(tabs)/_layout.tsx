@@ -1,6 +1,66 @@
-import { Tabs } from 'expo-router';
-import { Pressable, View, Text } from 'react-native';
+import { Tabs, useRouter } from 'expo-router';
+import { Pressable, View, Animated } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
+
+function SosButton() {
+  const router = useRouter();
+  const [pulse] = useState(() => new Animated.Value(0));
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 1200, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: 1200, useNativeDriver: true }),
+      ]),
+    ).start();
+  }, [pulse]);
+
+  const ringOpacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.4, 0] });
+  const ringScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.65] });
+
+  return (
+    <Pressable
+      onPress={() => router.navigate('/(tabs)/protocolo')}
+      accessibilityRole="button"
+      accessibilityLabel="Protocolo de Emergência SOS"
+      style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+    >
+      {/* Anel pulsante atrás do botão */}
+      <Animated.View
+        style={{
+          position: 'absolute',
+          width: 58,
+          height: 58,
+          borderRadius: 29,
+          backgroundColor: Colors.emergency,
+          opacity: ringOpacity,
+          transform: [{ scale: ringScale }],
+          marginBottom: 12,
+        }}
+      />
+      <View
+        style={{
+          width: 58,
+          height: 58,
+          borderRadius: 29,
+          backgroundColor: Colors.emergency,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: 12,
+          shadowColor: Colors.emergency,
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.5,
+          shadowRadius: 14,
+          elevation: 12,
+        }}
+      >
+        <Ionicons name="shield" size={26} color={Colors.bg} />
+      </View>
+    </Pressable>
+  );
+}
 
 export default function TabLayout() {
   return (
@@ -15,49 +75,52 @@ export default function TabLayout() {
         },
         tabBarActiveTintColor: Colors.gold,
         tabBarInactiveTintColor: Colors.muted,
-        tabBarLabelStyle: { fontSize: 11 },
+        tabBarLabelStyle: { fontSize: 10 },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Hoje' }} />
-      <Tabs.Screen name="metodo" options={{ title: 'Método' }} />
       <Tabs.Screen
-        name="protocolo"
+        name="index"
         options={{
-          title: 'SOS',
-          tabBarButton: (props) => (
-            <Pressable
-              onPress={props.onPress ?? undefined}
-              onLongPress={props.onLongPress ?? undefined}
-              accessibilityRole="button"
-              accessibilityLabel="Protocolo de Emergência"
-              style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
-            >
-              <View
-                style={{
-                  width: 54,
-                  height: 54,
-                  borderRadius: 27,
-                  backgroundColor: Colors.emergency,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: 12,
-                  shadowColor: Colors.emergency,
-                  shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: 0.45,
-                  shadowRadius: 12,
-                  elevation: 10,
-                }}
-              >
-                <Text style={{ color: '#fff', fontWeight: '800', fontSize: 14, letterSpacing: 0.5 }}>
-                  SOS
-                </Text>
-              </View>
-            </Pressable>
+          title: 'Hoje',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home-outline" size={size} color={color} />
           ),
         }}
       />
-      <Tabs.Screen name="escudo" options={{ title: 'Escudo' }} />
-      <Tabs.Screen name="perfil" options={{ title: 'Perfil' }} />
+      <Tabs.Screen
+        name="metodo"
+        options={{
+          title: 'Método',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="book-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="protocolo"
+        options={{
+          title: '',
+          tabBarButton: () => <SosButton />,
+        }}
+      />
+      <Tabs.Screen
+        name="escudo"
+        options={{
+          title: 'Escudo',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="shield-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="perfil"
+        options={{
+          title: 'Perfil',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-outline" size={size} color={color} />
+          ),
+        }}
+      />
       {/* Hidden from tab bar */}
       <Tabs.Screen name="plans" options={{ href: null }} />
     </Tabs>

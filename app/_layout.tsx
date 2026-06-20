@@ -4,6 +4,17 @@ import { AppState, Platform, View, Text, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import * as LocalAuthentication from 'expo-local-authentication';
+import { useFonts } from 'expo-font';
+import {
+  CormorantGaramond_400Regular,
+  CormorantGaramond_400Regular_Italic,
+  CormorantGaramond_600SemiBold,
+  CormorantGaramond_600SemiBold_Italic,
+} from '@expo-google-fonts/cormorant-garamond';
+import {
+  JetBrainsMono_400Regular,
+  JetBrainsMono_600SemiBold,
+} from '@expo-google-fonts/jetbrains-mono';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/hooks/useAuthStore';
 import { useProfileStore } from '@/hooks/useProfileStore';
@@ -16,6 +27,14 @@ import '../global.css';
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    CormorantGaramond: CormorantGaramond_400Regular,
+    'CormorantGaramond-Italic': CormorantGaramond_400Regular_Italic,
+    'CormorantGaramond-SemiBold': CormorantGaramond_600SemiBold,
+    'CormorantGaramond-SemiBoldItalic': CormorantGaramond_600SemiBold_Italic,
+    JetBrainsMono: JetBrainsMono_400Regular,
+    'JetBrainsMono-SemiBold': JetBrainsMono_600SemiBold,
+  });
   // Na web, o SSR gera HTML sem sessão; o cliente redireciona para login após mount.
   // Renderizamos null até o cliente estar hidratado para evitar o erro React #418.
   // Na web, o SSR gera HTML sem sessão; o cliente redireciona após mount.
@@ -124,7 +143,7 @@ export default function RootLayout() {
     }
   }, [session, isLoading, segments, profile, profileLoading, router]);
 
-  if (!hydrated) return null;
+  if (!hydrated || !fontsLoaded) return null;
 
   return (
     <>

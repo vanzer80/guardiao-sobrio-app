@@ -10,10 +10,12 @@ import {
   TextInput,
 } from 'react-native';
 import { useEffect, useState, useCallback } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
 import { daysSince, todayISO } from '@/lib/sobriety';
 import { getMilestoneLabel } from '@/lib/protocolo';
-import { getPilarHoje, getPromptHoje } from '@/lib/fundamentos';
+import { getPilarHoje, getPromptHoje, getFundamentoDodia } from '@/lib/fundamentos';
 import { loadEntryToday, saveEntryToday, extractText, MIN_CHARS } from '@/lib/diario';
 import { Colors } from '@/constants/Colors';
 import type { Tables } from '@/lib/database.types';
@@ -23,8 +25,14 @@ type Completion = Tables<'checklist_completions'>;
 type Profile = Tables<'profiles'>;
 type DiaryEntry = Tables<'diary_entries'>;
 
-function formatDate(d: Date): string {
-  return d.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+function formatDateMono(d: Date): string {
+  const weekday = d
+    .toLocaleDateString('pt-BR', { weekday: 'long' })
+    .split('-')[0]
+    .toUpperCase();
+  const day = d.getDate();
+  const month = d.toLocaleDateString('pt-BR', { month: 'long' }).toUpperCase();
+  return `${weekday} · ${day} ${month}`;
 }
 
 export default function HojeScreen() {
@@ -81,7 +89,6 @@ export default function HojeScreen() {
   }, []);
 
   useEffect(() => {
-    // Carrega os dados ao montar (e quando loadData mudar).
     loadData();
   }, [loadData]);
 
@@ -98,14 +105,13 @@ export default function HojeScreen() {
     } = await supabase.auth.getSession();
     if (!session) return;
 
-    const userId = session.user.id;
+    const uid = session.user.id;
     const today = todayISO();
     const isCompleted = completions.some((c) => c.item_id === itemId);
-    const previous = completions; // snapshot para rollback em caso de erro
+    const previous = completions;
 
     setToggling((prev) => new Set(prev).add(itemId));
 
-    // Optimistic update
     if (isCompleted) {
       setCompletions((prev) => prev.filter((c) => c.item_id !== itemId));
     } else {
@@ -113,7 +119,7 @@ export default function HojeScreen() {
         ...prev,
         {
           id: `temp-${itemId}`,
-          user_id: userId,
+          user_id: uid,
           item_id: itemId,
           completed_date: today,
           completed_at: new Date().toISOString(),
@@ -127,15 +133,14 @@ export default function HojeScreen() {
           .delete()
           .eq('item_id', itemId)
           .eq('completed_date', today)
-          .eq('user_id', userId)
+          .eq('user_id', uid)
       : await supabase.from('checklist_completions').insert({
-          user_id: userId,
+          user_id: uid,
           item_id: itemId,
           completed_date: today,
         });
 
     if (error) {
-      // Reverte o update otimista — o banco é a fonte de verdade.
       setCompletions(previous);
       Alert.alert('Não foi possível salvar', 'Verifique sua conexão e tente novamente.');
     }
@@ -173,96 +178,186 @@ export default function HojeScreen() {
   const days = daysSince(profile?.sobriety_start_date ?? null);
   const milestoneLabel = getMilestoneLabel(days);
   const allDone = items.length > 0 && completions.length >= items.length;
+  const doneCount = completions.length;
+  const totalCount = items.length;
+  const progressPct = totalCount > 0 ? (doneCount / totalCount) * 100 : 0;
+  const fundamento = getFundamentoDodia(days ?? 0);
+
+  // Próximo marco em N dias
+  const MILESTONES = [1, 3, 7, 14, 21, 30, 60, 90, 180, 365];
+  const nextMilestone = MILESTONES.find((m) => (days ?? 0) < m);
+  const toMilestone = nextMilestone !== undefined ? nextMilestone - (days ?? 0) : null;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }}>
       <ScrollView
-        contentContainerStyle={{ padding: 24 }}
+        contentContainerStyle={{ padding: 22, paddingBottom: 48 }}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={Colors.gold}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.gold} />
         }
       >
-        {/* Saudação */}
-        <Text style={{ color: Colors.muted, fontSize: 13, marginBottom: 4 }}>
-          {formatDate(new Date())}
-        </Text>
-        <Text style={{ color: Colors.text, fontSize: 20, fontWeight: '600', marginBottom: 32 }}>
-          {profile?.full_name ? `Olá, ${profile.full_name.split(' ')[0]}` : 'Olá'}
-        </Text>
-
-        {/* Marco de dias */}
-        {milestoneLabel && (
+        {/* ── Saudação ── */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
+          <View>
+            <Text style={{ color: Colors.muted, fontSize: 13, fontFamily: 'GeneralSans' }}>
+              {profile?.full_name ? `Olá, ${profile.full_name.split(' ')[0]}` : 'Olá'}
+            </Text>
+            <Text style={{ fontFamily: 'JetBrainsMono', fontSize: 11, letterSpacing: 1.5, color: Colors.mutedDark, marginTop: 2 }}>
+              {formatDateMono(new Date())}
+            </Text>
+          </View>
           <View
             style={{
-              backgroundColor: `${Colors.gold}15`,
+              width: 42,
+              height: 42,
+              borderRadius: 21,
+              backgroundColor: Colors.surfaceRaised,
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.07)',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Ionicons name="notifications-outline" size={19} color={Colors.muted} />
+          </View>
+        </View>
+
+        {/* ── Marco de dias (banner — aparece só no dia do marco) ── */}
+        {milestoneLabel && (
+          <LinearGradient
+            colors={['#1f1a10', '#141312']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
               borderRadius: 16,
               padding: 20,
-              marginBottom: 24,
+              marginBottom: 14,
               borderWidth: 1,
               borderColor: Colors.gold,
               alignItems: 'center',
             }}
           >
-            <Text
-              style={{
-                fontFamily: 'CormorantGaramond',
-                color: Colors.gold,
-                fontSize: 32,
-                marginBottom: 4,
-              }}
-            >
+            <Text style={{ fontFamily: 'CormorantGaramond', color: Colors.gold, fontSize: 32, marginBottom: 4 }}>
               {milestoneLabel}
             </Text>
-            <Text style={{ color: Colors.text, fontSize: 15, fontWeight: '600' }}>
-              Marco alcançado
-            </Text>
+            <Text style={{ color: Colors.text, fontSize: 15, fontWeight: '600' }}>Marco alcançado</Text>
             <Text style={{ color: Colors.muted, fontSize: 13, marginTop: 4, textAlign: 'center' }}>
-              Cada dia guardado é uma escolha. Parabéns.
+              Cada dia guardado é uma escolha.
             </Text>
-          </View>
+          </LinearGradient>
         )}
 
-        {/* Contador de sobriedade */}
-        <View
+        {/* ── Contador de sobriedade ── */}
+        <LinearGradient
+          colors={['#1a1917', '#141312']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
           style={{
-            backgroundColor: Colors.surface,
-            borderRadius: 16,
-            padding: 24,
+            borderRadius: 18,
+            padding: 26,
+            paddingHorizontal: 24,
+            flexDirection: 'row',
             alignItems: 'center',
-            marginBottom: 32,
+            gap: 22,
             borderWidth: 1,
-            borderColor: Colors.border,
+            borderColor: 'rgba(255,255,255,0.07)',
+            marginBottom: 14,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.4,
+            shadowRadius: 16,
+            elevation: 8,
           }}
         >
-          <Text
-            style={{
-              fontFamily: 'CormorantGaramond',
-              color: Colors.gold,
-              fontSize: 72,
-              lineHeight: 80,
-            }}
-          >
-            {days ?? '—'}
-          </Text>
-          <Text style={{ color: Colors.muted, fontSize: 15, marginTop: 4 }}>
-            {days === 1 ? 'dia guardado' : 'dias guardados'}
-          </Text>
-          {!profile?.sobriety_start_date && (
-            <Text style={{ color: Colors.muted, fontSize: 12, marginTop: 8, textAlign: 'center' }}>
-              Defina sua data de início no perfil
+          {/* Círculo com contador */}
+          <View style={{ position: 'relative', flexShrink: 0 }}>
+            <View
+              style={{
+                width: 96,
+                height: 96,
+                borderRadius: 48,
+                borderWidth: 2,
+                borderColor: 'rgba(200,168,75,0.2)',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ fontFamily: 'JetBrainsMono-SemiBold', fontSize: 38, color: Colors.gold, lineHeight: 44 }}>
+                {days ?? '—'}
+              </Text>
+            </View>
+            {/* Ícone de escudo sobreposto */}
+            <View
+              style={{
+                position: 'absolute',
+                bottom: -2,
+                right: 0,
+                backgroundColor: Colors.surface,
+                borderRadius: 12,
+                padding: 3,
+              }}
+            >
+              <Ionicons name="shield" size={18} color={Colors.gold} />
+            </View>
+          </View>
+
+          {/* Texto direito */}
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: Colors.text, fontSize: 15, fontWeight: '600', marginBottom: 4 }}>
+              Dias construindo
             </Text>
-          )}
+            <Text style={{ color: Colors.muted, fontSize: 13, lineHeight: 20 }}>
+              {toMilestone !== null
+                ? <>Próximo marco em <Text style={{ color: Colors.gold }}>{toMilestone} {toMilestone === 1 ? 'dia' : 'dias'}</Text>. Sem streak punitiva.</>
+                : !profile?.sobriety_start_date
+                ? 'Defina sua data de início no perfil.'
+                : 'Você chegou nos marcos mais longe.'}
+            </Text>
+          </View>
+        </LinearGradient>
+
+        {/* ── Âncora do Dia ── */}
+        <View
+          style={{
+            backgroundColor: 'rgba(200,168,75,0.07)',
+            borderWidth: 1,
+            borderColor: 'rgba(200,168,75,0.18)',
+            borderRadius: 16,
+            padding: 20,
+            marginBottom: 28,
+          }}
+        >
+          <Text style={{ fontFamily: 'JetBrainsMono', fontSize: 9, letterSpacing: 2, color: Colors.gold, marginBottom: 10 }}>
+            ÂNCORA DO DIA
+          </Text>
+          <Text style={{ fontFamily: 'CormorantGaramond-Italic', fontSize: 22, lineHeight: 30, color: Colors.text }}>
+            {`"${fundamento.fraseAncora}"`}
+          </Text>
         </View>
 
-        {/* Checklist diário */}
+        {/* ── Checklist diário ── */}
         <View style={{ marginBottom: 8 }}>
-          <Text style={{ color: Colors.muted, fontSize: 12, letterSpacing: 0.8, marginBottom: 16 }}>
-            CHECKLIST DE HOJE
-          </Text>
+          {/* Header do checklist */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <Text style={{ fontFamily: 'JetBrainsMono', fontSize: 10, letterSpacing: 2, color: Colors.muted }}>
+              {pilarHoje} · CHECKLIST DIÁRIO
+            </Text>
+            <Text style={{ fontFamily: 'JetBrainsMono', fontSize: 13, color: Colors.gold }}>
+              {doneCount}/{totalCount}
+            </Text>
+          </View>
+
+          {/* Barra de progresso 4px */}
+          <View style={{ height: 4, borderRadius: 2, backgroundColor: '#211f1d', overflow: 'hidden', marginBottom: 14 }}>
+            <View
+              style={{
+                height: '100%',
+                borderRadius: 2,
+                backgroundColor: Colors.gold,
+                width: `${progressPct}%`,
+              }}
+            />
+          </View>
 
           {items.length === 0 ? (
             <Text style={{ color: Colors.muted, fontSize: 14, textAlign: 'center', paddingVertical: 24 }}>
@@ -290,7 +385,6 @@ export default function HojeScreen() {
                       gap: 14,
                     }}
                   >
-                    {/* Checkbox */}
                     <View
                       style={{
                         width: 22,
@@ -304,15 +398,13 @@ export default function HojeScreen() {
                       }}
                     >
                       {completed && (
-                        <Text style={{ color: Colors.bg, fontSize: 12, fontWeight: '700' }}>
-                          ✓
-                        </Text>
+                        <Ionicons name="checkmark" size={13} color={Colors.bg} />
                       )}
                     </View>
                     <Text
                       style={{
                         color: completed ? Colors.muted : Colors.text,
-                        fontSize: 16,
+                        fontSize: 15,
                         textDecorationLine: completed ? 'line-through' : 'none',
                         flex: 1,
                       }}
@@ -347,74 +439,66 @@ export default function HojeScreen() {
           )}
         </View>
 
-        {/* Reflexão do Dia */}
+        {/* ── Reflexão do Dia ── */}
         <View style={{ marginTop: 32 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <Text style={{ color: Colors.muted, fontSize: 12, letterSpacing: 0.8 }}>
-              REFLEXÃO DO DIA · {pilarHoje}
+            <Text style={{ fontFamily: 'JetBrainsMono', fontSize: 10, letterSpacing: 2, color: Colors.muted }}>
+              REFLEXÃO DO DIA
             </Text>
             {diaryEntry && (
               <Text style={{ color: Colors.success, fontSize: 11 }}>✓ salvo</Text>
             )}
           </View>
 
-          <Text style={{ color: Colors.text, fontSize: 15, lineHeight: 22, marginBottom: 16, fontStyle: 'italic' }}>
+          <Text style={{ color: Colors.text, fontSize: 15, lineHeight: 24, marginBottom: 16, fontStyle: 'italic' }}>
             {promptHoje}
           </Text>
 
-          {/* Diário: editável mesmo após salvar (apenas não deletável) */}
-          <View>
-            <TextInput
-              value={diaryText}
-              onChangeText={setDiaryText}
-              placeholder="Escreva sua reflexão aqui..."
-              placeholderTextColor={Colors.muted}
-              multiline
-              textAlignVertical="top"
+          <TextInput
+            value={diaryText}
+            onChangeText={setDiaryText}
+            placeholder="Escreva sua reflexão aqui..."
+            placeholderTextColor={Colors.muted}
+            multiline
+            textAlignVertical="top"
+            style={{
+              backgroundColor: Colors.surface,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: Colors.border,
+              padding: 16,
+              color: Colors.text,
+              fontSize: 14,
+              lineHeight: 22,
+              minHeight: 120,
+            }}
+          />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+            <Text style={{ fontSize: 12, color: diaryText.trim().length >= MIN_CHARS ? Colors.success : Colors.muted }}>
+              {diaryText.trim().length}/{MIN_CHARS} mín.{diaryEntry ? ' · editável' : ''}
+            </Text>
+            <Pressable
+              onPress={handleSaveDiary}
+              disabled={diarySaving || diaryText.trim().length < MIN_CHARS}
               style={{
-                backgroundColor: Colors.surface,
-                borderRadius: 12,
-                borderWidth: 1,
-                borderColor: diaryEntry ? Colors.border : Colors.border,
-                padding: 16,
-                color: Colors.text,
-                fontSize: 14,
-                lineHeight: 22,
-                minHeight: 120,
+                backgroundColor: diaryText.trim().length >= MIN_CHARS ? Colors.gold : Colors.border,
+                paddingHorizontal: 20,
+                paddingVertical: 10,
+                borderRadius: 10,
               }}
-            />
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-              <Text style={{
-                fontSize: 12,
-                color: diaryText.trim().length >= MIN_CHARS ? Colors.success : Colors.muted,
-              }}>
-                {diaryText.trim().length}/{MIN_CHARS} mín.
-                {diaryEntry ? ' · editável' : ''}
-              </Text>
-              <Pressable
-                onPress={handleSaveDiary}
-                disabled={diarySaving || diaryText.trim().length < MIN_CHARS}
-                style={{
-                  backgroundColor: diaryText.trim().length >= MIN_CHARS ? Colors.gold : Colors.border,
-                  paddingHorizontal: 20,
-                  paddingVertical: 10,
-                  borderRadius: 10,
-                }}
-              >
-                {diarySaving
-                  ? <ActivityIndicator size="small" color={Colors.bg} />
-                  : <Text style={{ color: Colors.bg, fontWeight: '600', fontSize: 14 }}>
-                      {diaryEntry ? 'Atualizar' : 'Salvar'}
-                    </Text>
-                }
-              </Pressable>
-            </View>
-            {diaryEntry && (
-              <Text style={{ color: Colors.muted, fontSize: 11, marginTop: 4 }}>
-                Entradas podem ser editadas, mas não excluídas.
-              </Text>
-            )}
+            >
+              {diarySaving
+                ? <ActivityIndicator size="small" color={Colors.bg} />
+                : <Text style={{ color: Colors.bg, fontWeight: '600', fontSize: 14 }}>
+                    {diaryEntry ? 'Atualizar' : 'Salvar'}
+                  </Text>}
+            </Pressable>
           </View>
+          {diaryEntry && (
+            <Text style={{ color: Colors.muted, fontSize: 11, marginTop: 4 }}>
+              Entradas podem ser editadas, mas não excluídas.
+            </Text>
+          )}
         </View>
 
         <Text style={{ color: Colors.muted, fontSize: 11, textAlign: 'center', marginTop: 40, marginBottom: 8 }}>

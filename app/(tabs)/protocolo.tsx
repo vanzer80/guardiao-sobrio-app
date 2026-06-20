@@ -253,7 +253,6 @@ export default function ProtocoloScreen() {
               color: Colors.gold,
               fontSize: 40,
               fontFamily: 'CormorantGaramond',
-              fontWeight: '300',
             }}
           >
             {phaseCountdown}
@@ -451,8 +450,9 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     color: Colors.muted,
+    fontFamily: 'JetBrainsMono',
     fontSize: 11,
-    letterSpacing: 1,
+    letterSpacing: 2,
     marginBottom: 12,
     alignSelf: 'flex-start',
   },
@@ -467,24 +467,26 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   stepLabel: {
-    color: Colors.muted,
+    color: Colors.emergency,
+    fontFamily: 'JetBrainsMono',
     fontSize: 11,
-    letterSpacing: 1,
+    letterSpacing: 3,
     marginBottom: 12,
     textAlign: 'center',
   },
   bigWord: {
-    fontFamily: 'CormorantGaramond',
-    fontSize: 52,
-    letterSpacing: 4,
+    fontWeight: '700',
+    fontSize: 64,
+    letterSpacing: 2,
     textAlign: 'center',
     marginBottom: 16,
   },
   stepInstruction: {
-    color: Colors.muted,
-    fontSize: 15,
+    color: Colors.mutedLight,
+    fontFamily: 'CormorantGaramond-Italic',
+    fontSize: 22,
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 32,
   },
   listRow: {
     flexDirection: 'row',

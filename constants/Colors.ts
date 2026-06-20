@@ -5,6 +5,8 @@ export const Colors = {
 
   text: '#e8e6e2',
   muted: '#8a8782',
+  mutedDark: '#524f4c',
+  mutedLight: '#a8a39c',
 
   gold: '#c8a84b',
   goldDim: '#a68a3a',
