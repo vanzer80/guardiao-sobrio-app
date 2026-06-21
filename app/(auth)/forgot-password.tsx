@@ -20,9 +20,10 @@ const RESEND_COOLDOWN_SECONDS = 60;
 
 function buildRedirectTo(): string {
   if (Platform.OS === 'web') {
-    return `${window.location.origin}/(auth)/reset-password`;
+    return `${window.location.origin}/reset-password`;
   }
-  return Linking.createURL('/(auth)/reset-password');
+  // Grupos Expo Router como (auth) são transparentes na URL — deep link usa /reset-password
+  return Linking.createURL('/reset-password');
 }
 
 export default function ForgotPasswordScreen() {
