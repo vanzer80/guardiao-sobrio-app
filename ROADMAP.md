@@ -245,7 +245,7 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 - [x] `app.json` — scheme `guardiaosobrio` alinhado nas Edge Functions
 - [ ] **Deploy Edge Functions** no Supabase ⚠️ requer `supabase login` + `supabase link`
 - [ ] **Configurar secrets** no Supabase Dashboard (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, price IDs)
-- [ ] **Aplicar migration** no banco remoto (`profiles.plan`, `stripe_customer_id`, audit log)
+- [x] **Aplicar migration** no banco remoto — `20260621180000_repair_monetization_drift.sql` (21/06/2026)
 - [ ] **Registrar webhook** no Stripe Dashboard → `https://huumwjwndsefdmgezohb.supabase.co/functions/v1/handle-stripe-webhooks`
 - [ ] **Criar produtos Stripe** (Essential Monthly/Annual, Guardian Monthly/Annual)
 - [ ] **Teste E2E** com cartão Stripe test mode (`4242 4242 4242 4242`)
@@ -391,8 +391,8 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 | DT6 | BUG-002 — `metodo.tsx` bloqueia fundamentos com checagem direta de plano em vez de `canAccessFeature()`; durante trial (plano efetivo = guardian) 10/13 fundamentos aparecem travados | `app/(tabs)/metodo.tsx` | Médio — usuário com trial ativo não acessa fundamentos 4–13 | Sprint 10 |
 | DT7 | BUG-003 — Frontend exibe Alert genérico em falha do RPC `activate_trial()`; exceção `trial_already_used` existe no banco mas não é tratada especificamente no cliente | `app/(tabs)/plans.tsx` | Baixo — UX confusa em tentativa de reativação | Sprint 10 |
 | DT8 | BUG-004 — Rota `/planos` retorna 404; tela de Planos (`/plans`) não tem link na navegação principal — acessível apenas via paywalls | `app/(tabs)/` + navegação | Baixo — confirmar se ausência de link direto é design intencional | Sprint 10 |
-| DT9 / DRIFT-01 | Migrations marcadas como aplicadas (em `schema_migrations`) mas não executadas: `profiles.plan`, `profiles.stripe_customer_id` ausentes no banco; varredura completa pendente | `supabase/migrations/` vs DB real | **Alto** — código/types assumem colunas inexistentes → erros runtime difíceis de diagnosticar (exatamente o Achado 1) | Imediato: rodar `diagnostico-migration-drift.sql` + `supabase db pull` + `supabase gen types` |
-| DT10 / MO-07 | Cliente lê `profiles.plan` (inexistente no DB); fonte real é `subscriptions.plan` — reflexo de plano pago pode estar quebrado (usuário pagante permanece `free` no app) | `app/_layout.tsx` · `supabase/functions/handle-stripe-webhooks/` | **Alto** · PENDENTE-VERIFICAÇÃO | Verificar com conta pagante (cartão Stripe teste) antes de qualquer sprint de monetização |
+| ~~DT9 / DRIFT-01~~ | **CORRIGIDO (21/06/2026 — PR `fix/drift01-mo07-monetizacao`).** Colunas `profiles.plan`, `profiles.stripe_customer_id`, `subscriptions.stripe_subscription_id` e tabela `subscription_audit_log` aplicadas via `20260621180000_repair_monetization_drift.sql`. Histórico de migrations reparado (3 migrations RLS registradas via repair). `database.types.ts` regenerado (`supabase gen types`). Ver ADR `docs/adr/0001-fonte-de-verdade-do-plano.md`. | `supabase/migrations/20260621180000_repair_monetization_drift.sql` | ~~Alto~~ **E2E PENDENTE-DONO** — checkout Stripe test mode para validar `profiles.plan` sendo atualizado | ✅ correção aplicada; e2e com cartão 4242... (passo do dono) |
+| ~~DT10 / MO-07~~ | **CORRIGIDO (21/06/2026 — mesmo PR).** `profiles.plan` agora existe no banco; webhook Stripe pode escrever nela; `_layout.tsx` pode lê-la. ADR-0001: Opção A (restaurar colunas) adotada. E2e de plano pago pendente-dono. | `app/_layout.tsx:120` · `supabase/functions/handle-stripe-webhooks/index.ts` | ~~Alto~~ **E2E PENDENTE-DONO** — confirmar que plano pago reflete no app após checkout | ✅ correção estrutural aplicada; `subscription_audit_log` criada; e2e com cartão Stripe teste (passo do dono) |
 
 ---
 
