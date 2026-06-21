@@ -571,6 +571,18 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      accept_family_invite: {
+        Args: { p_token: string }
+        Returns: Json
+      }
+      get_family_day_status: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      effective_plan: {
+        Args: { uid: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

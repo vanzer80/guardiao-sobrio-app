@@ -390,14 +390,14 @@ export default function PerfilScreen() {
           {[
             { label: 'Diário de reflexões', route: '/diario' },
             { label: 'Histórico do checklist', route: '/historico' },
+            { label: 'Aceitar convite de familiar', route: '/aceitar-convite' },
             { label: 'Ver planos', route: '/(tabs)/plans' },
             { label: 'Privacidade', route: '/privacidade' },
             { label: 'Sobre', route: '/sobre' },
           ].map((item, i) => (
             <Pressable
               key={item.route}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              onPress={() => router.push(item.route as any)}
+              onPress={() => router.push(item.route as Parameters<typeof router.push>[0])}
               style={{
                 flexDirection: 'row',
                 justifyContent: 'space-between',

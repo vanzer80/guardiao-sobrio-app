@@ -59,3 +59,25 @@ Formato: [Conventional Commits](https://www.conventionalcommits.org/). Data no p
 - `CHANGELOG.md` — este arquivo (criado agora).
 
 **Regra de processo estabelecida:** toda correção atualiza, no mesmo PR, `docs/auditoria/` + `ROADMAP.md` + `CHANGELOG.md` (e ADR para decisões estruturais), mantendo `database.types.ts`/migrations sincronizados com o banco.
+
+---
+
+### feat — Módulo Familiar: lado do familiar implementado (Achado 6)
+
+**Contexto:** O lado do dono (gerar/revogar convite) já funcionava. O lado do familiar não tinha UI: `acceptInvite()` e `getFamilyDayStatus()` existiam em `lib/family.ts` mas nenhuma tela os chamava, e ambos esbarravam na RLS.
+
+**Banco (migration `20260621200000_family_accept_and_status_rpcs.sql`, aplicado em produção):**
+- `accept_family_invite(p_token text)` — RPC SECURITY DEFINER: valida token, checa expiração, faz UPDATE em `family_connections` (o familiar não tem permissão de UPDATE pela policy normal). Retorna `{ok, reason?}`.
+- `get_family_day_status()` — RPC SECURITY DEFINER: lê `checklist_completions` do dono (bloqueado pela RLS normal) e expõe apenas o booleano do dia. Retorna `{linked, dayGuarded?, label?}`.
+
+**App:**
+- `app/aceitar-convite.tsx` — nova tela: campo de 6 dígitos → `supabase.rpc('accept_family_invite')` → sucesso/erro com `showAlert` web-safe.
+- `app/(auth)/welcome.tsx` — link "Recebi um convite de familiar / Aceitar" adicionado.
+- `app/(tabs)/perfil.tsx` — item "Aceitar convite de familiar" adicionado na seção "Mais".
+- `app/(tabs)/escudo.tsx` — seção "FAMILIAR VINCULADO" adicionada: carrega `get_family_day_status` no mount; se `linked=true`, exibe label e botão de atualizar. Independente de plano (familiar pode ser free).
+- `lib/family.ts` — `acceptInvite()` e `getFamilyDayStatus()` atualizados para usar as RPCs SECURITY DEFINER.
+- `lib/database.types.ts` — tipos adicionados para `accept_family_invite`, `get_family_day_status` e `effective_plan`.
+
+**Gates:** typecheck ✅ · lint ✅ · 81 testes ✅
+
+**Validação e2e:** PENDENTE-DONO — rodar roteiro de 2 contas (dono gera → familiar aceita → familiar vê dia guardado → dono vê CONECTADO → revogar).
