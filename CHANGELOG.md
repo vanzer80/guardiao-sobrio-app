@@ -9,6 +9,40 @@ Formato: [Conventional Commits](https://www.conventionalcommits.org/). Data no p
 
 ---
 
+## 2026-06-21 (fix/drift01-mo07-monetizacao)
+
+### fix(db) — DRIFT-01 + MO-07: colunas de monetização aplicadas + histórico de migrations reparado
+
+**Problema raiz:** A migration `20260619203119_add_monetization_schema` estava registrada em `schema_migrations` mas o DDL nunca havia executado. As colunas `profiles.plan`, `profiles.stripe_customer_id`, `subscriptions.stripe_subscription_id` e a tabela `subscription_audit_log` eram inexistentes no banco. Resultado: usuários pagantes via Stripe apareciam com plano `'free'` no app; o webhook retornava 500 ao tentar inserir no audit log inexistente.
+
+**O que foi feito:**
+
+- `supabase/migrations/20260621180000_repair_monetization_drift.sql` — migration corretiva idempotente:
+  - `ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT 'free' CHECK (...)`
+  - `ALTER TABLE profiles ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT UNIQUE`
+  - `ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT UNIQUE`
+  - `CREATE TABLE IF NOT EXISTS subscription_audit_log (...)` com RLS + policies + índices + grants
+  - RLS em `subscriptions` (policies `"Users view own subscription"` e `"Service role manages subscriptions"`)
+
+- Reparo de histórico: migrations `20260621000000`, `20260621090000`, `20260621170000` registradas em `supabase_migrations.schema_migrations` via repair (tinham sido aplicadas via Management API mas não estavam registradas). Migration list: 11 Local = 11 Remote, nenhuma pendente.
+
+- `lib/database.types.ts` — regenerado via `supabase gen types typescript --linked`. Mudanças:
+  - `profiles.plan`: `string` → `string | null` (correto — sem NOT NULL no banco)
+  - `subscription_audit_log.created_at`: `string` → `string | null`
+  - Functions: `accept_family_invite`, `effective_plan`, `get_family_day_status` agora gerados automaticamente (não precisam de manutenção manual)
+  - `graphql_public` schema adicionado (output padrão do Supabase CLI)
+
+- `docs/auditoria/08-correcao-drift-mo07.md` — plano de remediação adicionado ao repo.
+- `docs/adr/0001-fonte-de-verdade-do-plano.md` — ADR documentando a decisão (Opção A: restaurar colunas).
+
+**Decisão (ADR-0001 — Opção A):** Restaurar as colunas faltantes em vez de migrar a fonte de verdade para `subscriptions.plan` (Opção B). Racional: menor delta de código, menor risco agora, fluxo Stripe já funciona com essa abordagem. Ver `docs/adr/0001-fonte-de-verdade-do-plano.md`.
+
+**Gates:** typecheck ✅ · lint ✅ (1 warning pré-existente em perfil.tsx, não deste PR) · 81/81 testes ✅
+
+**E2E pendente-dono:** validar com checkout real em Stripe test mode (cartão `4242 4242 4242 4242`) → confirmar `profiles.plan` e `subscriptions.plan` atualizados, audit log inserido sem erro, app refletindo plano pago na sessão.
+
+---
+
 ## 2026-06-21
 
 ### fix — Achado 1: causa-raiz do módulo familiar corrigida em produção
