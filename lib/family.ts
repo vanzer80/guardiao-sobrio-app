@@ -112,60 +112,23 @@ export async function revokeAccess(connectionId: string): Promise<void> {
   if (error) throw error;
 }
 
-/** Aceita convite pelo código de 6 dígitos */
+/** Aceita convite pelo código de 6 dígitos (usa RPC SECURITY DEFINER — evita bloqueio de RLS) */
 export async function acceptInvite(
   token: string,
-  familyUserId: string
+  _familyUserId?: string
 ): Promise<{ ok: boolean; reason?: string }> {
-  // Busca conexão com o token (o familiar não conhece o user_id dono)
-  const { data: conn, error } = await supabase
-    .from('family_connections')
-    .select('id, invitation_status, invitation_expires_at')
-    .eq('invitation_token', token)
-    .eq('invitation_status', 'pending')
-    .maybeSingle();
-
-  if (error || !conn) {
-    return { ok: false, reason: 'Código inválido ou já utilizado.' };
-  }
-
-  // Verifica expiração do convite
-  const expiresAt = (conn as FamilyConnection).invitation_expires_at;
-  if (expiresAt && new Date(expiresAt) < new Date()) {
-    return { ok: false, reason: 'Código expirado. Peça um novo convite.' };
-  }
-
-  const { error: updateError } = await supabase
-    .from('family_connections')
-    .update({
-      family_user_id: familyUserId,
-      invitation_status: 'accepted',
-      invitation_token: null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', conn.id);
-
-  if (updateError) throw updateError;
-  return { ok: true };
+  const { data, error } = await supabase.rpc('accept_family_invite', { p_token: token });
+  if (error) throw error;
+  return data as unknown as { ok: boolean; reason?: string };
 }
 
-/** Vista do familiar: só status do dia (checklist completado ou não) */
-export async function getFamilyDayStatus(
-  mainUserId: string
-): Promise<{ dayGuarded: boolean; label: string }> {
-  const today = new Date().toISOString().slice(0, 10);
-
-  const { data } = await supabase
-    .from('checklist_completions')
-    .select('id')
-    .eq('user_id', mainUserId)
-    .eq('completed_date', today)
-    .limit(1)
-    .maybeSingle();
-
-  const dayGuarded = Boolean(data);
-  return {
-    dayGuarded,
-    label: dayGuarded ? 'Dia guardado' : 'Em jornada',
-  };
+/** Vista do familiar: status do dia do dono via RPC SECURITY DEFINER */
+export async function getFamilyDayStatus(): Promise<{
+  linked: boolean;
+  dayGuarded?: boolean;
+  label?: string;
+}> {
+  const { data, error } = await supabase.rpc('get_family_day_status');
+  if (error) throw error;
+  return data as unknown as { linked: boolean; dayGuarded?: boolean; label?: string };
 }

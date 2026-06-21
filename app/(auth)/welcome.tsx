@@ -103,6 +103,19 @@ export default function WelcomeScreen() {
             </Text>
           </Pressable>
 
+          {/* Link para familiar que recebeu convite */}
+          <Pressable
+            onPress={() => router.push('/aceitar-convite')}
+            accessibilityRole="button"
+            accessibilityLabel="Aceitar convite de familiar"
+            style={{ marginTop: 2, alignItems: 'center', padding: 10 }}
+          >
+            <Text style={{ color: Colors.mutedDark, fontSize: 13 }}>
+              Recebi um convite de familiar{' '}
+              <Text style={{ color: Colors.gold }}>Aceitar</Text>
+            </Text>
+          </Pressable>
+
           {/* Disclaimers hard rule */}
           <Text
             style={{

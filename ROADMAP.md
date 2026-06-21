@@ -266,6 +266,8 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 - [x] Migration: `family_connections.invitation_expires_at`
 - [x] **Fix Achado 1 (Rodada 4 — 2026-06-21):** coluna `invitation_expires_at` nunca foi aplicada ao banco (migration drift) → `createInvite` falhava com *"column does not exist"*. Aplicada diretamente + `effective_plan()` + policy `RESTRICTIVE`. Validação e2e: PENDENTE-DONO.
 - [x] **Fix Achado 2 (commits `4613a2a` + `ecda1f9`):** paywall indevido em cold-load de `/escudo` e `/programa30` — selecionar `plan` E `trialEnd` como stores separadas para reatividade.
+- [x] **Fix 42P17 — Recursão circular RLS (Rodada 5, PR #6, 2026-06-21):** `effective_plan()` retorna `'free'` para `is_anonymous=true`; policy `"Anônimos não podem criar conexões de família"` removida. Aplicado em produção + migration `20260621170000`. Verificado: INSERT autenticado → 201.
+- [x] **Módulo Familiar — lado do familiar (Achado 6, 2026-06-21):** RPCs `accept_family_invite` + `get_family_day_status` (SECURITY DEFINER) aplicadas em produção; tela `app/aceitar-convite.tsx`; links em `welcome.tsx` + `perfil.tsx`; vista "Familiar Vinculado" em `escudo.tsx`. Validação e2e: PENDENTE-DONO.
 - **DoD:** ✅ typecheck verde · ✅ lint verde · ✅ hard rules auditadas
 
 ### Sprint 7 — Estatísticas ✅ CONCLUÍDO (19/06/2026)

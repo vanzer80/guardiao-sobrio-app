@@ -33,6 +33,7 @@ import {
   getActiveConnection,
   createInvite,
   revokeAccess,
+  getFamilyDayStatus,
   type FamilyConnection,
 } from '@/lib/family';
 import { useRouter } from 'expo-router';
@@ -43,6 +44,50 @@ function showAlert(title: string, message: string) {
   } else {
     Alert.alert(title, message);
   }
+}
+
+// ── Vista do familiar vinculado ──────────────────────────────────────────────
+
+function FamiliarVinculadoSection({
+  label,
+  onRefresh,
+}: {
+  label: string;
+  onRefresh: () => void;
+}) {
+  const isGuarded = label === 'Dia guardado';
+  return (
+    <View
+      style={{
+        backgroundColor: isGuarded ? `${Colors.success}11` : Colors.surface,
+        borderRadius: 12,
+        padding: 20,
+        borderWidth: 1,
+        borderColor: isGuarded ? Colors.success : Colors.border,
+        alignItems: 'center',
+        gap: 10,
+      }}
+    >
+      <Text style={{ color: Colors.muted, fontSize: 12, letterSpacing: 0.5 }}>
+        STATUS DO DIA
+      </Text>
+      <Text
+        style={{
+          color: isGuarded ? Colors.success : Colors.muted,
+          fontSize: 24,
+          fontWeight: '700',
+        }}
+      >
+        {label}
+      </Text>
+      <Text style={{ color: Colors.muted, fontSize: 12, textAlign: 'center' }}>
+        Este é o único dado compartilhado pelo seu familiar.
+      </Text>
+      <Pressable onPress={onRefresh} style={{ paddingVertical: 6, paddingHorizontal: 16 }}>
+        <Text style={{ color: Colors.gold, fontSize: 13 }}>Atualizar</Text>
+      </Pressable>
+    </View>
+  );
 }
 
 // ── Paywall banner ──────────────────────────────────────────────────────────
@@ -431,6 +476,7 @@ export default function EscudoScreen() {
   const [triggers, setTriggers] = useState<UserTrigger[]>([]);
   const [loadingTriggers, setLoadingTriggers] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [familiarLabel, setFamiliarLabel] = useState<string | null>(null);
 
   const canAccessTriggers = canAccessFeature('triggerMap');
   const canAccessFamily = canAccessFeature('familyModule');
@@ -451,6 +497,30 @@ export default function EscudoScreen() {
     })();
     return () => { cancelled = true; };
   }, [userId, canAccessTriggers]);
+
+  const loadFamiliarStatus = async () => {
+    if (!userId) return;
+    try {
+      const status = await getFamilyDayStatus();
+      setFamiliarLabel(status.linked ? (status.label ?? 'Em jornada') : null);
+    } catch {
+      // silent — não bloqueia a tela se a RPC falhar
+    }
+  };
+
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const status = await getFamilyDayStatus();
+        if (!cancelled) setFamiliarLabel(status.linked ? (status.label ?? 'Em jornada') : null);
+      } catch {
+        // silent
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [userId]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -509,7 +579,17 @@ export default function EscudoScreen() {
           </View>
         )}
 
-        {/* ── MÓDULO FAMILIAR ── */}
+        {/* ── FAMILIAR VINCULADO (vista do familiar) — visível independente de plano ── */}
+        {familiarLabel !== null && (
+          <>
+            <Text style={{ color: Colors.muted, fontSize: 12, letterSpacing: 0.8, marginTop: 40, marginBottom: 12 }}>
+              FAMILIAR VINCULADO
+            </Text>
+            <FamiliarVinculadoSection label={familiarLabel} onRefresh={loadFamiliarStatus} />
+          </>
+        )}
+
+        {/* ── MÓDULO FAMILIAR (lado do dono — plano Guardião) ── */}
         <Text style={{ color: Colors.muted, fontSize: 12, letterSpacing: 0.8, marginTop: 40, marginBottom: 12 }}>
           MÓDULO FAMILIAR
         </Text>
