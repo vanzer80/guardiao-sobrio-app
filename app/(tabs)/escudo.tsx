@@ -424,6 +424,8 @@ function FamiliarSection({ userId }: { userId: string }) {
 
 export default function EscudoScreen() {
   const canAccessFeature = usePlanStore((s) => s.canAccessFeature);
+  usePlanStore((s) => s.plan);
+  usePlanStore((s) => s.trialEnd);
   const userId = useAuthStore((s) => s.session?.user?.id ?? '');
   const [triggers, setTriggers] = useState<UserTrigger[]>([]);
   const [loadingTriggers, setLoadingTriggers] = useState(false);
