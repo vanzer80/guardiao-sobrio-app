@@ -143,6 +143,8 @@ export default function RootLayout() {
     const isAtivacao = segs[1] === 'ativacao';
     // convert = tela de criação de conta para usuário anônimo; não redirecionar para tabs
     const isConvert = segs[1] === 'convert';
+    // reset-password = sessão PASSWORD_RECOVERY ativa; não redirecionar para tabs
+    const isResetPassword = segs[1] === 'reset-password';
 
     if (!session) {
       SplashScreen.hideAsync();
@@ -157,7 +159,7 @@ export default function RootLayout() {
     if (!profile?.onboarding_completed) {
       // Setup incompleto — leva (ou mantém) o usuário na tela de setup.
       if (!isSetup) router.replace('/(auth)/setup');
-    } else if (inAuthGroup && !isAtivacao && !isConvert) {
+    } else if (inAuthGroup && !isAtivacao && !isConvert && !isResetPassword) {
       router.replace('/(tabs)');
     }
   }, [session, isLoading, segments, profile, profileLoading, router]);

@@ -179,6 +179,14 @@ export default function LoginScreen() {
             )}
           />
 
+          <Pressable
+            onPress={() => router.push('/(auth)/forgot-password')}
+            accessibilityRole="button"
+            style={{ alignSelf: 'flex-end', paddingVertical: 4 }}
+          >
+            <Text style={{ color: Colors.gold, fontSize: 14 }}>Esqueceu a senha?</Text>
+          </Pressable>
+
           <Button
             title="Entrar"
             onPress={handleSubmit(onLogin)}
