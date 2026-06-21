@@ -283,6 +283,7 @@ function FamiliarSection({ userId }: { userId: string }) {
       setShowInviteForm(false);
       setInviteName('');
     } catch (err) {
+      console.error('[createInvite] falha ao gerar convite:', err);
       showAlert('Erro', err instanceof Error ? err.message : 'Não foi possível gerar o convite.');
     } finally {
       setInviting(false);
