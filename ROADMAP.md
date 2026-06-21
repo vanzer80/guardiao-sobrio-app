@@ -264,6 +264,8 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 - [x] Nova tab "Escudo" na navegação (Mapa de Gatilhos + Familiar)
 - [x] Paywall suave por feature (Essential para gatilhos, Guardião para familiar)
 - [x] Migration: `family_connections.invitation_expires_at`
+- [x] **Fix Achado 1 (Rodada 4 — 2026-06-21):** coluna `invitation_expires_at` nunca foi aplicada ao banco (migration drift) → `createInvite` falhava com *"column does not exist"*. Aplicada diretamente + `effective_plan()` + policy `RESTRICTIVE`. Validação e2e: PENDENTE-DONO.
+- [x] **Fix Achado 2 (commits `4613a2a` + `ecda1f9`):** paywall indevido em cold-load de `/escudo` e `/programa30` — selecionar `plan` E `trialEnd` como stores separadas para reatividade.
 - **DoD:** ✅ typecheck verde · ✅ lint verde · ✅ hard rules auditadas
 
 ### Sprint 7 — Estatísticas ✅ CONCLUÍDO (19/06/2026)
@@ -389,6 +391,8 @@ guardiao-sobrio-web    → repo separado (landing/PWA) — criado na Fase 2+
 | DT6 | BUG-002 — `metodo.tsx` bloqueia fundamentos com checagem direta de plano em vez de `canAccessFeature()`; durante trial (plano efetivo = guardian) 10/13 fundamentos aparecem travados | `app/(tabs)/metodo.tsx` | Médio — usuário com trial ativo não acessa fundamentos 4–13 | Sprint 10 |
 | DT7 | BUG-003 — Frontend exibe Alert genérico em falha do RPC `activate_trial()`; exceção `trial_already_used` existe no banco mas não é tratada especificamente no cliente | `app/(tabs)/plans.tsx` | Baixo — UX confusa em tentativa de reativação | Sprint 10 |
 | DT8 | BUG-004 — Rota `/planos` retorna 404; tela de Planos (`/plans`) não tem link na navegação principal — acessível apenas via paywalls | `app/(tabs)/` + navegação | Baixo — confirmar se ausência de link direto é design intencional | Sprint 10 |
+| DT9 / DRIFT-01 | Migrations marcadas como aplicadas (em `schema_migrations`) mas não executadas: `profiles.plan`, `profiles.stripe_customer_id` ausentes no banco; varredura completa pendente | `supabase/migrations/` vs DB real | **Alto** — código/types assumem colunas inexistentes → erros runtime difíceis de diagnosticar (exatamente o Achado 1) | Imediato: rodar `diagnostico-migration-drift.sql` + `supabase db pull` + `supabase gen types` |
+| DT10 / MO-07 | Cliente lê `profiles.plan` (inexistente no DB); fonte real é `subscriptions.plan` — reflexo de plano pago pode estar quebrado (usuário pagante permanece `free` no app) | `app/_layout.tsx` · `supabase/functions/handle-stripe-webhooks/` | **Alto** · PENDENTE-VERIFICAÇÃO | Verificar com conta pagante (cartão Stripe teste) antes de qualquer sprint de monetização |
 
 ---
 
