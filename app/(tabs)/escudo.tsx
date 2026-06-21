@@ -283,6 +283,7 @@ function FamiliarSection({ userId }: { userId: string }) {
       setShowInviteForm(false);
       setInviteName('');
     } catch (err) {
+      console.error('[createInvite] falha ao gerar convite:', err);
       showAlert('Erro', err instanceof Error ? err.message : 'Não foi possível gerar o convite.');
     } finally {
       setInviting(false);
@@ -424,6 +425,8 @@ function FamiliarSection({ userId }: { userId: string }) {
 
 export default function EscudoScreen() {
   const canAccessFeature = usePlanStore((s) => s.canAccessFeature);
+  usePlanStore((s) => s.plan);
+  usePlanStore((s) => s.trialEnd);
   const userId = useAuthStore((s) => s.session?.user?.id ?? '');
   const [triggers, setTriggers] = useState<UserTrigger[]>([]);
   const [loadingTriggers, setLoadingTriggers] = useState(false);

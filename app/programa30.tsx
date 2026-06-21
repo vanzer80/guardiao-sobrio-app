@@ -306,6 +306,8 @@ export default function Programa30Screen() {
   const router = useRouter();
   const userId = useAuthStore((s) => s.session?.user?.id ?? '');
   const canAccessFeature = usePlanStore((s) => s.canAccessFeature);
+  usePlanStore((s) => s.plan);
+  usePlanStore((s) => s.trialEnd);
   const [diasCompletos, setDiasCompletos] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [selectedDia, setSelectedDia] = useState<DiaPrograma | null>(null);
