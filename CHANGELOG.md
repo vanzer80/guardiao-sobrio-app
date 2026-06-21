@@ -9,6 +9,31 @@ Formato: [Conventional Commits](https://www.conventionalcommits.org/). Data no p
 
 ---
 
+## 2026-06-21 (diagnóstico)
+
+### docs — Diagnóstico de drift + veredito MO-07 (read-only)
+
+**Escopo:** diagnóstico read-only de DRIFT-01 e MO-07. Nenhuma correção foi aplicada.
+
+**DRIFT-01 — CONFIRMADO:**
+- Migration `20260619203119_add_monetization_schema` registrada em `schema_migrations` mas DDL **não executado**: `profiles.plan`, `profiles.stripe_customer_id` e `subscriptions.stripe_subscription_id` ausentes no banco.
+- `subscription_audit_log` provavelmente não existe (não retornou em `information_schema.columns`).
+- 3 migrations de RLS (`20260621000000`, `20260621090000`, `20260621170000`) foram aplicadas via Management API mas **não estão registradas** em `schema_migrations` → risco de conflito em `supabase db push`.
+
+**MO-07 — VEREDITO: QUEBRADO:**
+- `_layout.tsx` lê `profiles.plan` (ausente no DB) → `setPlan()` nunca é chamado → plano sempre `'free'`.
+- Webhook Stripe (`checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`) tenta escrever em colunas ausentes → falhas silenciosas (erros 400 não verificados).
+- `handlePaymentFailed` usa `profiles.stripe_customer_id` (ausente) → nunca encontra o usuário.
+- **Usuários pagantes via Stripe visualizam plano 'free' no app.** Único path funcional: trial via `profiles.trial_end` (coluna existe, funciona corretamente).
+
+**Novos arquivos:**
+- `docs/auditoria/07-diagnostico-drift-resultados.md` — resultados completos (D.1–D.4), diff types×DB, veredito MO-07, achados adicionais, próximos passos.
+
+**Atualizados:**
+- `ROADMAP.md` — DT9 e DT10 marcados como "DIAGNÓSTICO CONCLUÍDO", detalhes do veredito.
+
+---
+
 ## 2026-06-21
 
 ### fix — Achado 1: causa-raiz do módulo familiar corrigida em produção
