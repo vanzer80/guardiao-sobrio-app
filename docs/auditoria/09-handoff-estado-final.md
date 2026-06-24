@@ -42,7 +42,7 @@ Priorizar por impacto; cada um vira um PR próprio (com docs/roadmap atualizados
 - **🟡 AR-03** — view segura do familiar: resolvida na prática via RPC `get_family_day_status` (SECURITY DEFINER); confirmar que substitui a view planejada.
 - **🟠 FN-23** — **Comunidade O Escudo** não implementada (Fase 3) — construir ou marcar explicitamente como fase futura no ROADMAP.
 - **🔵 RN-03 / RN-04** — cortes free×pago (histórico/diário 7 dias) **não impostos** (todos recebem 90 dias / ilimitado).
-- **🔵 MO-02** — preço anual: `R$299` (doc) × `R$399` (código). Alinhar.
+- **✅ MO-02** — preço anual alinhado: código agora `R$299` (= doc). Resolvido.
 - **🔵 MO-03** — produtos avulsos do PRD/funil **não implementados** (o app é por assinatura) — decidir e alinhar docs.
 - **🔵 VOZ-01** — notificação usa "Um dia de cada vez" (frase de AA que a marca removeu — D2). Trocar.
 - **🔵 AR-08** — landing pública / SSR (visão PRD) inexistente (app é SPA). Decidir escopo.

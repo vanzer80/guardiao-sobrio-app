@@ -79,7 +79,7 @@ export const PRICING = {
   },
   guardian: {
     monthly: 39.9,
-    annual: 399.0, // ~33/month when billed annually
+    annual: 299.0, // ~25/month when billed annually
     currency: 'BRL',
   },
 };
