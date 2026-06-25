@@ -8,10 +8,10 @@
 
 | | |
 |---|---|
-| **Versão** | 0.1 (rascunho — documento vivo) |
-| **Status** | Em definição. Nada fechado; refinável e escalável por fases. |
+| **Versão** | 0.2 (documento vivo) |
+| **Status** | Fase 1 iniciada — fundação de dados criada (ver ADR-0002 + migration). Demais fases refináveis. |
 | **Escopo deste arquivo** | Contrato técnico de implementação (arquitetura + dados + decisões). O "porquê" de produto/clínico está na spec canônica. |
-| **Stack** | Next.js 15 · TypeScript · Tailwind · shadcn/ui · next-intl · Supabase · Vercel |
+| **Stack** | **Expo / React Native** (expo-router · NativeWind · Zustand) · TypeScript · **Supabase Edge Functions** · backend LLM com provedor abstraído. _(A spec canônica cita Next.js; o alvo real é o app Expo — ver ADR-0002, D1.)_ |
 
 ---
 
@@ -128,7 +128,7 @@ consent_records          -- consentimento granular
 - **Consentimento granular** (`consent_records`): memória, geolocalização e notificações proativas são consentimentos **separados**.
 - **Captura passiva de memória (Camada 2) deve ser auditável e revisável pelo usuário** — nada de inferir e guardar dado sensível silenciosamente. Coluna `source` distingue `declarado` de `inferido`.
 - **Geolocalização** só com opt-in explícito e granular; minimizar coleta.
-- **LLM:** definir modelo e estratégia de prompt para (a) condução da conversa e (b) extração estruturada de memória. ⚠️ A extração não pode fabricar atributos.
+- **LLM (DECIDIDO — ADR-0002, D2):** abstração de provedor (`ChatProvider`) com **primário gratuito** (Groq / Gemini / OpenRouter free — a fixar na edge function) e **OpenAI como fallback** (rate limit / falha / degradação). Provedor concreto fica atrás de interface única; chaves de API **só** no ambiente da edge function. Estratégia de prompt para (a) condução da conversa e (b) extração estruturada de memória ainda a detalhar. ⚠️ A extração não pode fabricar atributos.
 
 ---
 
@@ -155,8 +155,31 @@ consent_records          -- consentimento granular
 - Limiar de confiança inicial para acionar proatividade (N ocorrências / janela de X dias).
 - Mix de notificação: push vs. in-app.
 - Árvore de decisão detalhada do escalonamento (merece documento próprio na spec canônica).
-- Modelo de LLM + estratégia de prompt (condução + extração de memória).
+- ~~Modelo de LLM~~ → **RESOLVIDO em ADR-0002 (D2):** primário gratuito + OpenAI fallback. Resta fixar o provedor gratuito concreto e a estratégia de prompt.
 - Requisitos de LGPD para dado de saúde — validar com jurídico/compliance.
+
+## 8. Estado da implementação
+
+| Item | Status | Onde |
+|---|---|---|
+| Decisões de fundação | ✅ Registradas | `docs/adr/0002-companheiro-apoio-proativo-fundacao.md` |
+| Esquema de dados Fase 1 + RLS | ✅ Migration criada (apply em staging pendente-dono) | `supabase/migrations/20260625120000_add_companion_schema.sql` |
+| Tipos `database.types.ts` | ⏳ Regenerar após apply | `lib/database.types.ts` |
+| Edge function (LLM + escalonamento) | ✅ Criada (deploy + secrets pendente-dono) | `supabase/functions/companion-chat/` |
+| Tela de chat no app | ⏳ Próximo incremento | `app/(tabs)/` ou rota dedicada (a criar) |
+
+**Edge function `companion-chat` (módulos):** `index.ts` (handler), `provider.ts`
+(abstração de LLM — primário gratuito + OpenAI fallback), `crisis.ts` (detecção
+determinística de crise + recursos CVV 188/SAMU 192 — testada), `prompts.ts`
+(system prompt MI + Prevenção de Recaída). Secrets em `supabase/functions/.env.example`.
+**Pendente-dono:** definir as keys (`COMPANION_PRIMARY_API_KEY`, `OPENAI_API_KEY`),
+`supabase functions deploy companion-chat`, e revisão clínica da copy/sinais de crise.
+
+**Nomes finais das tabelas (prefixo `companion_`):** `companion_profiles` (Camada 1),
+`companion_consent_records`, `companion_conversations`, `companion_messages`,
+`companion_learned_strategies` (Camada 2), `companion_support_network`,
+`companion_crisis_events`. Camada 3 (`companion_patterns`,
+`companion_proactive_notifications`) adiada para a Fase 3.
 
 ---
 
