@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       checklist_completions: {
@@ -103,6 +78,253 @@ export type Database = {
           is_active?: boolean
           sort_order?: number
           title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      companion_consent_records: {
+        Row: {
+          consent_type: string
+          created_at: string
+          granted: boolean
+          granted_at: string | null
+          id: string
+          revoked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          consent_type: string
+          created_at?: string
+          granted: boolean
+          granted_at?: string | null
+          id?: string
+          revoked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          consent_type?: string
+          created_at?: string
+          granted?: boolean
+          granted_at?: string | null
+          id?: string
+          revoked_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      companion_conversations: {
+        Row: {
+          context_location: string | null
+          context_time: string | null
+          created_at: string
+          crisis_level: number | null
+          ended_at: string | null
+          id: string
+          outcome: string | null
+          started_at: string
+          trigger_type: string | null
+          user_id: string
+        }
+        Insert: {
+          context_location?: string | null
+          context_time?: string | null
+          created_at?: string
+          crisis_level?: number | null
+          ended_at?: string | null
+          id?: string
+          outcome?: string | null
+          started_at?: string
+          trigger_type?: string | null
+          user_id: string
+        }
+        Update: {
+          context_location?: string | null
+          context_time?: string | null
+          created_at?: string
+          crisis_level?: number | null
+          ended_at?: string | null
+          id?: string
+          outcome?: string | null
+          started_at?: string
+          trigger_type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      companion_crisis_events: {
+        Row: {
+          action_taken: string | null
+          conversation_id: string | null
+          created_at: string
+          detected_at: string
+          id: string
+          resolved: boolean | null
+          severity: string | null
+          user_id: string
+        }
+        Insert: {
+          action_taken?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          detected_at?: string
+          id?: string
+          resolved?: boolean | null
+          severity?: string | null
+          user_id: string
+        }
+        Update: {
+          action_taken?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          detected_at?: string
+          id?: string
+          resolved?: boolean | null
+          severity?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "companion_crisis_events_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "companion_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companion_learned_strategies: {
+        Row: {
+          created_at: string
+          description: string | null
+          effectiveness_score: number | null
+          id: string
+          last_used_at: string | null
+          source: string
+          times_used: number
+          type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          effectiveness_score?: number | null
+          id?: string
+          last_used_at?: string | null
+          source?: string
+          times_used?: number
+          type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          effectiveness_score?: number | null
+          id?: string
+          last_used_at?: string | null
+          source?: string
+          times_used?: number
+          type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      companion_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "companion_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "companion_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companion_profiles: {
+        Row: {
+          age_range: string | null
+          created_at: string
+          display_name: string | null
+          onboarding_done: boolean
+          primary_substance: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age_range?: string | null
+          created_at?: string
+          display_name?: string | null
+          onboarding_done?: boolean
+          primary_substance?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age_range?: string | null
+          created_at?: string
+          display_name?: string | null
+          onboarding_done?: boolean
+          primary_substance?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      companion_support_network: {
+        Row: {
+          can_contact: boolean
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          relationship: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          can_contact?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          relationship?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          can_contact?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          relationship?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -726,10 +948,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },
 } as const
+A new version of Supabase CLI is available: v2.108.0 (currently installed v2.45.5)
+We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
