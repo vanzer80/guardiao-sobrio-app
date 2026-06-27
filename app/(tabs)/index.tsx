@@ -12,6 +12,7 @@ import {
 import { useEffect, useState, useCallback } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { daysSince, todayISO } from '@/lib/sobriety';
 import { getMilestoneLabel } from '@/lib/protocolo';
@@ -36,6 +37,7 @@ function formatDateMono(d: Date): string {
 }
 
 export default function HojeScreen() {
+  const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [items, setItems] = useState<ChecklistItem[]>([]);
   const [completions, setCompletions] = useState<Completion[]>([]);
@@ -315,6 +317,48 @@ export default function HojeScreen() {
             </Text>
           </View>
         </LinearGradient>
+
+        {/* ── Companheiro de Apoio (chat) ── */}
+        <Pressable
+          onPress={() => router.push('/companheiro')}
+          accessibilityRole="button"
+          accessibilityLabel="Abrir o Companheiro de Apoio"
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 14,
+            backgroundColor: 'rgba(200,168,75,0.07)',
+            borderWidth: 1,
+            borderColor: 'rgba(200,168,75,0.18)',
+            borderRadius: 16,
+            padding: 18,
+            marginBottom: 28,
+          }}
+        >
+          <View
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: Colors.surfaceRaised,
+              borderWidth: 1,
+              borderColor: 'rgba(200,168,75,0.3)',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Ionicons name="chatbubbles-outline" size={22} color={Colors.gold} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: Colors.text, fontSize: 15, fontWeight: '600' }}>
+              Companheiro de Apoio
+            </Text>
+            <Text style={{ color: Colors.muted, fontSize: 13, lineHeight: 19, marginTop: 2 }}>
+              Conversar agora — para a fissura ou só pra desabafar.
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={Colors.muted} />
+        </Pressable>
 
         {/* ── Âncora do Dia ── */}
         <View

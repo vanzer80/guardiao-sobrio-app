@@ -36,6 +36,10 @@ yarn-error.*
 
 # temp
 ..\guardiao-temp
+supabase/.temp/
+
+# Supabase CLI local state
+
 
 # typescript
 *.tsbuildinfo
